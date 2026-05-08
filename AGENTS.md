@@ -56,6 +56,57 @@ If you add code, also add (or extend) the relevant command in `pyproject.toml` a
 
 ---
 
+## Working principles
+
+These four principles guide every change. They sit above the hard rules below — the rules tell you what not to do, the principles tell you how to think.
+
+### 1. Think before coding
+
+Don't assume. Don't hide confusion. Surface tradeoffs.
+
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity first
+
+Minimum code that solves the problem. Nothing speculative.
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you wrote 200 lines and it could be 50, rewrite it.
+
+The test: would a senior engineer say this is overcomplicated? If yes, simplify.
+
+### 3. Surgical changes
+
+Touch only what you must. Clean up only your own mess.
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it.
+- Remove imports/variables/functions that *your* changes made unused. Don't remove pre-existing dead code unless asked.
+
+The test: every changed line should trace directly to the request.
+
+### 4. Goal-driven execution
+
+Define success criteria. Loop until verified.
+
+Transform tasks into verifiable goals:
+
+- "Add validation" → "Write tests for invalid inputs, then make them pass."
+- "Fix the bug" → "Write a test that reproduces it, then make it pass."
+- "Refactor X" → "Ensure tests pass before and after."
+
+For multi-step tasks, state a brief plan with verification per step. Strong success criteria let an agent loop independently; weak criteria ("make it work") force constant clarification.
+
+---
+
 ## Hard rules
 
 These are non-negotiable. Violations should be reverted before merge.
@@ -131,11 +182,7 @@ When in doubt, open an issue using the **Design proposal** template before writi
 
 ## Aliases
 
-This file's content also applies if your tooling looks for any of:
+This file is the source of truth. Other tools may look for differently-named files:
 
-- `CLAUDE.md`
-- `.cursorrules`
-- `.aider.conf.yml` instructions
-- `AGENT.md` (singular)
-
-Treat `AGENTS.md` as the source of truth and keep aliases (if any) thin pointers back to this file.
+- [`CLAUDE.md`](CLAUDE.md) — present at the repo root. Claude Code auto-loads it. It contains a short summary of the working principles and points back here for the full guide.
+- `.cursorrules`, `.aider.conf.yml`, `AGENT.md` (singular) — not present. If you add support for one, keep it a thin pointer to this file rather than a copy. If `CLAUDE.md` and `AGENTS.md` ever diverge, `AGENTS.md` wins.

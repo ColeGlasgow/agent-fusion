@@ -154,7 +154,7 @@ agent-fusion draws on ideas from existing open-source agent projects:
 
 ## For AI coding agents
 
-If you are an AI coding agent (Claude Code, Codex, Cursor, Aider, etc.) working on this repository, read [AGENTS.md](AGENTS.md) **before making changes**. It defines:
+If you are an AI coding agent (Claude Code, Codex, Cursor, Aider, etc.) working on this repository, read [AGENTS.md](AGENTS.md) **before making changes** — Claude Code users get a short summary in [CLAUDE.md](CLAUDE.md), which is auto-loaded on session start and points back here. `AGENTS.md` defines:
 
 - The repo's current stage and what kinds of changes are in scope.
 - The package layout, entry points, and where new code belongs.
