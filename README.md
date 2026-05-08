@@ -1,269 +1,179 @@
-# agent-fusion 🤖⚡
+# agent-fusion
 
-> A unified multi-agent orchestration framework that intelligently routes tasks between **Claude Code** and **OpenAI Codex**, combining the best of both for efficient, context-aware AI coding workflows.
->
-> [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-> [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-> [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
->
-> ---
->
-> ## 🧠 Vision
->
-> Modern AI coding agents are powerful but siloed — Claude Code excels at deep reasoning, long-context understanding, and nuanced code review, while OpenAI Codex (and GPT-4o with code interpreter) shines at rapid code generation, completion, and scripting. **agent-fusion** bridges this gap by acting as an intelligent router and orchestrator that:
->
-> - Selects the **right agent for the right task** based on context, complexity, and cost
-> - - Enables **parallel agent execution** for independent subtasks
->   - - Provides a **unified tool interface** so both agents share the same tools (shell, filesystem, browser, APIs)
->     - - Maintains **shared memory and context** across agent handoffs
->       - - Supports **human-in-the-loop** checkpoints for high-stakes decisions
->        
->         - ---
->
-> ## 🏗️ Architecture
->
-> ```
-> ┌─────────────────────────────────────────────────────┐
-> │                   agent-fusion                       │
-> │                                                     │
-> │  ┌─────────────┐     ┌──────────────────────────┐  │
-> │  │   Planner   │────▶│     Task Router          │  │
-> │  │  (LLM-based)│     │  (rules + LLM classify)  │  │
-> │  └─────────────┘     └──────────┬───────────────┘  │
-> │                                 │                    │
-> │              ┌──────────────────┼──────────────┐    │
-> │              ▼                  ▼              ▼    │
-> │  ┌──────────────────┐  ┌──────────────┐  ┌──────┐  │
-> │  │  Claude Code     │  │ OpenAI Codex │  │ Both │  │
-> │  │  Agent Wrapper   │  │ Agent Wrapper│  │(par.)│  │
-> │  └────────┬─────────┘  └──────┬───────┘  └──┬───┘  │
-> │           │                   │             │       │
-> │           └───────────────────┴─────────────┘       │
-> │                         │                           │
-> │              ┌──────────▼──────────┐                │
-> │              │   Shared Tool Layer │                │
-> │              │  shell | files | api│                │
-> │              └──────────┬──────────┘                │
-> │                         │                           │
-> │              ┌──────────▼──────────┐                │
-> │              │   Memory & Context  │                │
-> │              │  (vector + episodic)│                │
-> │              └─────────────────────┘                │
-> └─────────────────────────────────────────────────────┘
-> ```
->
-> ---
->
-> ## ✨ Key Features
->
-> - **Intelligent Task Routing** — Automatically classifies tasks and routes to the optimal agent (Claude for reasoning/review, Codex for generation/completion)
-> - - **Dual-Agent Orchestration** — Run Claude Code and Codex in parallel on independent subtasks, then merge results
->   - - **Shared Tool Layer** — Both agents access the same tools: shell execution, file I/O, web search, API calls, and more
->     - - **4-Layer Memory System** — Working memory, episodic memory, semantic (vector) memory, and learned patterns
->       - - **Hook System** — Pre/post hooks for logging, safety gates, cost tracking, and quality checks
->         - - **Context-Aware Handoffs** — Seamless context passing between agents mid-task
->           - - **Cost & Token Optimization** — Route cheap tasks to the more economical agent automatically
->             - - **Human-in-the-Loop Gates** — Define quality or safety thresholds that require human approval before proceeding
->               - - **MCP Compatible** — Works with the Model Context Protocol for standardized tool definitions
->                
->                 - ---
->
-> ## 📦 Project Structure
->
-> ```
-> agent-fusion/
-> ├── agents/
-> │   ├── claude_agent.py        # Claude Code wrapper & API client
-> │   ├── codex_agent.py         # OpenAI Codex / GPT-4o wrapper
-> │   ├── base_agent.py          # Abstract base class for all agents
-> │   └── parallel_runner.py     # Parallel agent execution engine
-> ├── router/
-> │   ├── router.py              # Task classification & routing logic
-> │   ├── rules.py               # Rule-based routing overrides
-> │   └── classifier.py          # LLM-based task classifier
-> ├── tools/
-> │   ├── shell.py               # Secure shell execution tool
-> │   ├── filesystem.py          # File read/write/search tool
-> │   ├── web_search.py          # Web search integration
-> │   ├── code_executor.py       # Sandboxed code execution
-> │   └── tool_registry.py       # Tool registration & discovery
-> ├── memory/
-> │   ├── working_memory.py      # Short-term context store
-> │   ├── episodic_memory.py     # Task history & outcomes
-> │   ├── vector_store.py        # Semantic search over past work
-> │   └── memory_manager.py      # Unified memory interface
-> ├── hooks/
-> │   ├── logging_hook.py        # Structured logging
-> │   ├── cost_tracker.py        # Token & API cost tracking
-> │   ├── quality_gate.py        # Output quality validation
-> │   └── safety_gate.py        # Safety & policy enforcement
-> ├── planner/
-> │   ├── planner.py             # High-level task decomposition
-> │   └── task_graph.py          # DAG-based task dependency management
-> ├── config/
-> │   ├── config.yaml            # Main configuration file
-> │   ├── routing_rules.yaml     # Routing rules and cost thresholds
-> │   └── agent_profiles.yaml    # Per-agent capability profiles
-> ├── cli/
-> │   └── main.py                # CLI entrypoint
-> ├── tests/
-> │   ├── test_router.py
-> │   ├── test_agents.py
-> │   └── test_tools.py
-> ├── docs/
-> │   ├── architecture.md
-> │   ├── routing.md
-> │   └── adding_agents.md
-> ├── .env.example
-> ├── pyproject.toml
-> └── README.md
-> ```
->
-> ---
->
-> ## 🚀 Quick Start
->
-> ### Prerequisites
->
-> - Python 3.10+
-> - - An Anthropic API key (for Claude)
->   - - An OpenAI API key (for Codex/GPT-4o)
->    
->     - ### Installation
->    
->     - ```bash
->       git clone https://github.com/ColeGlasgow/agent-fusion.git
->       cd agent-fusion
->       python -m venv .venv
->       source .venv/bin/activate  # Windows: .venv\Scripts\activate
->       pip install -e ".[dev]"
->       ```
->
-> ### Configuration
->
-> ```bash
-> cp .env.example .env
-> # Edit .env with your API keys:
-> # ANTHROPIC_API_KEY=sk-ant-...
-> # OPENAI_API_KEY=sk-...
-> ```
->
-> ### Basic Usage
->
-> ```python
-> from agent_fusion import FusionOrchestrator
->
-> orchestrator = FusionOrchestrator()
->
-> # The router automatically picks the best agent
-> result = await orchestrator.run(
->     task="Refactor this Python module to use async/await and add type hints",
->     context={"file": "src/legacy_module.py"}
-> )
->
-> print(result.output)
-> print(f"Agent used: {result.agent}")
-> print(f"Tokens used: {result.token_count}")
-> ```
->
-> ### CLI Usage
->
-> ```bash
-> # Run a single task (auto-route)
-> agent-fusion run "Write a FastAPI endpoint for user authentication"
->
-> # Force a specific agent
-> agent-fusion run --agent claude "Review this PR for security vulnerabilities"
-> agent-fusion run --agent codex "Complete the docstrings in utils.py"
->
-> # Run in parallel mode on a complex task
-> agent-fusion run --parallel "Build and test a REST API for a todo app"
-> ```
->
-> ---
->
-> ## 🔀 Routing Logic
->
-> The router uses a combination of rule-based and LLM-based classification:
->
-> | Task Type | Preferred Agent | Reason |
-> |-----------|----------------|--------|
-> | Code review / security audit | Claude | Deep reasoning, long context |
-> | Rapid code generation | Codex | Optimized for code completion |
-> | Architecture decisions | Claude | Nuanced multi-factor reasoning |
-> | Boilerplate / scaffolding | Codex | Fast, cost-effective |
-> | Bug analysis with stack trace | Claude | Root cause reasoning |
-> | Unit test generation | Codex | Pattern completion |
-> | Large codebase understanding | Claude | 200k token context |
-> | Quick autocomplete-style tasks | Codex | Low latency |
->
-> You can override routing with rules in `config/routing_rules.yaml`.
->
-> ---
->
-> ## 🔌 Open Source Foundations
->
-> agent-fusion builds on and draws inspiration from:
->
-> - **[alfredolopez80/multi-agent-ralph-loop](https://github.com/alfredolopez80/multi-agent-ralph-loop)** — Multi-agent orchestration patterns for Claude Code
-> - - **[AgenticGoKit/AgenticGoKit](https://github.com/AgenticGoKit/AgenticGoKit)** — LLM-agnostic, event-driven agent patterns
->   - - **[swarmclaw/swarmclaw](https://github.com/swarmclawai/swarmclaw)** — Self-hosted agent runtime with MCP tools
->     - - **[unixzii/little-agent](https://github.com/unixzii/little-agent)** — Lightweight embedded agent framework
->       - - **[Protocol-Lattice/go-agent](https://github.com/Protocol-Lattice/go-agent)** — Graph-aware memory and multi-agent orchestration
->        
->         - ---
->
-> ## 🧩 Adding a New Agent
->
-> Subclass `BaseAgent` and implement the required interface:
->
-> ```python
-> from agent_fusion.agents.base_agent import BaseAgent, AgentResult
->
-> class MyCustomAgent(BaseAgent):
->     name = "my-agent"
->     capabilities = ["code-generation", "text-summarization"]
->
->     async def run(self, task: str, context: dict) -> AgentResult:
->         # Call your LLM API here
->         response = await self.call_api(task, context)
->         return AgentResult(output=response, agent=self.name)
-> ```
->
-> Register it in `config/agent_profiles.yaml` and the router will automatically consider it.
->
-> ---
->
-> ## 🛡️ Safety & Cost Controls
->
-> - **Budget limits**: Set per-task and per-session token/cost caps in `config.yaml`
-> - - **Safety gates**: Pre-defined hooks block destructive operations without human approval
->   - - **Audit log**: Every agent action is logged with full context for review
->     - - **Sandboxed execution**: Code execution tools run in isolated environments
->      
->       - ---
->
-> ## 🗺️ Roadmap
->
-> - [ ] Core router and dual-agent wrappers (Claude + Codex)
-> - [ ] - [ ] Shared tool layer (shell, filesystem, web search)
-> - [ ] - [ ] 4-layer memory system
-> - [ ] - [ ] Hook system (logging, cost, quality, safety)
-> - [ ] - [ ] CLI entrypoint
-> - [ ] - [ ] MCP server compatibility
-> - [ ] - [ ] Web UI dashboard for session monitoring
-> - [ ] - [ ] Support for additional agents (Gemini, local LLMs via Ollama)
-> - [ ] - [ ] GitHub Actions integration for automated code review workflows
-> - [ ] - [ ] Plugin marketplace for community tools
->
-> - [ ] ---
->
-> - [ ] ## 🤝 Contributing
->
-> - [ ] Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting issues and pull requests.
->
-> - [ ] ---
->
-> - [ ] ## 📄 License
->
-> - [ ] This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+A unified multi-agent orchestration framework that routes coding tasks between Claude Code and OpenAI Codex, choosing the right agent per task and coordinating shared tools, memory, and context.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Status: design phase](https://img.shields.io/badge/status-design%20phase-orange.svg)](#project-status)
+
+---
+
+## At a glance
+
+| Field             | Value                                                           |
+| ----------------- | --------------------------------------------------------------- |
+| Purpose           | Route coding tasks between Claude Code and OpenAI Codex         |
+| Stage             | Design phase (no runtime code yet)                              |
+| Language          | Python 3.10+                                                    |
+| Package layout    | `src/agent_fusion/` (planned)                                   |
+| Entry point       | `agent_fusion.cli:main` (planned)                               |
+| Build system      | `pyproject.toml` (planned)                                      |
+| External services | Anthropic API (Claude), OpenAI API (Codex/GPT)                  |
+| Required secrets  | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`                           |
+| Agent guide       | [AGENTS.md](AGENTS.md)                                          |
+| Glossary          | [docs/GLOSSARY.md](docs/GLOSSARY.md)                            |
+
+## Project status
+
+agent-fusion is in the **design phase**. This repository currently contains the project vision, target architecture, and planned structure. No runtime code is implemented yet. Issues, design discussion, and proposals are welcome — see [Contributing](#contributing).
+
+The roadmap below tracks what lands first.
+
+---
+
+## Vision
+
+Today's AI coding agents are powerful but siloed. Claude Code is strong at long-context reasoning, code review, and architectural judgment; OpenAI Codex (and GPT-class completion models) is strong at fast generation, scaffolding, and pattern completion. agent-fusion treats these as complementary tools and provides:
+
+- A **task router** that picks the right agent for each unit of work based on task type, context size, and cost.
+- A **shared tool layer** so both agents call the same shell, filesystem, and web tools.
+- A **shared memory layer** so context survives handoffs between agents.
+- **Parallel execution** for independent subtasks, with result merging.
+- **Human-in-the-loop gates** for high-stakes or destructive actions.
+
+---
+
+## Planned architecture
+
+```
+                    ┌──────────────┐
+                    │   Planner    │
+                    │ (task graph) │
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+                    │    Router    │
+                    │ rules + LLM  │
+                    └──┬────────┬──┘
+                       │        │
+              ┌────────▼──┐  ┌──▼─────────┐
+              │  Claude   │  │  Codex     │
+              │  wrapper  │  │  wrapper   │
+              └────────┬──┘  └──┬─────────┘
+                       │        │
+                    ┌──▼────────▼──┐
+                    │  Tool layer  │
+                    │ shell · fs · │
+                    │   web · api  │
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+                    │    Memory    │
+                    │ working ·    │
+                    │ episodic ·   │
+                    │  vector      │
+                    └──────────────┘
+```
+
+---
+
+## Planned project structure
+
+This is the target layout. Directories will be created as their components land on the roadmap.
+
+```
+agent-fusion/
+├── src/agent_fusion/
+│   ├── agents/          # Agent wrappers (Claude, Codex, base class)
+│   ├── router/          # Task classification and routing
+│   ├── planner/         # Task decomposition and DAG
+│   ├── tools/           # Shared tool layer (shell, fs, web, etc.)
+│   ├── memory/          # Working, episodic, and vector memory
+│   ├── hooks/           # Pre/post hooks (logging, cost, safety)
+│   └── cli/             # CLI entrypoint
+├── tests/               # Unit and integration tests
+├── docs/                # Architecture and contributor docs
+├── config/              # Default configuration files
+├── examples/            # Example tasks and notebooks
+├── .github/             # Issue templates, PR template, workflows
+├── pyproject.toml
+├── LICENSE
+└── README.md
+```
+
+The `src/` layout is intentional: it keeps the importable package isolated from repo tooling and prevents accidental imports from the working directory during tests.
+
+---
+
+## Roadmap
+
+Milestones are tracked as GitHub issues once filed. The current ordering:
+
+1. Base agent interface and Claude/Codex wrappers
+2. Rule-based task router with a small classifier fallback
+3. Shared tool layer (shell, filesystem, web search)
+4. Working and episodic memory
+5. Hook system (logging, cost tracking, safety gates)
+6. CLI entrypoint
+7. Parallel execution and result merging
+8. Vector memory and semantic recall
+9. MCP-compatible tool definitions
+10. Additional agents (Gemini, local models via Ollama)
+
+---
+
+## Routing intent
+
+The router will combine deterministic rules with a lightweight classifier. Initial heuristics:
+
+| Task type                       | Preferred agent | Reason                            |
+| ------------------------------- | --------------- | --------------------------------- |
+| Code review / security audit    | Claude          | Long context, deep reasoning      |
+| Architecture decisions          | Claude          | Multi-factor reasoning            |
+| Bug analysis with stack trace   | Claude          | Root-cause inference              |
+| Large codebase understanding    | Claude          | Long-context window               |
+| Rapid code generation           | Codex           | Optimized for completion          |
+| Boilerplate and scaffolding     | Codex           | Fast and economical               |
+| Unit test generation            | Codex           | Pattern completion                |
+| Quick autocomplete-style edits  | Codex           | Low latency                       |
+
+Rules will be overridable via configuration.
+
+---
+
+## Prior art and inspiration
+
+agent-fusion draws on ideas from existing open-source agent projects:
+
+- [alfredolopez80/multi-agent-ralph-loop](https://github.com/alfredolopez80/multi-agent-ralph-loop) — multi-agent orchestration patterns for Claude Code
+- [AgenticGoKit/AgenticGoKit](https://github.com/AgenticGoKit/AgenticGoKit) — LLM-agnostic, event-driven agent patterns
+- [unixzii/little-agent](https://github.com/unixzii/little-agent) — lightweight embedded agent framework
+- [Protocol-Lattice/go-agent](https://github.com/Protocol-Lattice/go-agent) — graph-aware memory and orchestration
+
+---
+
+## For AI coding agents
+
+If you are an AI coding agent (Claude Code, Codex, Cursor, Aider, etc.) working on this repository, read [AGENTS.md](AGENTS.md) **before making changes**. It defines:
+
+- The repo's current stage and what kinds of changes are in scope.
+- The package layout, entry points, and where new code belongs.
+- Build, test, and lint commands once they are wired up.
+- Conventions to follow (Python style, commit messages, no emojis in source or docs).
+- Hard rules to never violate (no fabricated APIs, no speculative abstractions, no destructive git operations without explicit approval).
+
+For domain terms used throughout the codebase (`router`, `planner`, `tool`, `hook`, `agent`, `memory tier`), see [docs/GLOSSARY.md](docs/GLOSSARY.md).
+
+---
+
+## Contributing
+
+Issues and design discussion are the most useful contributions during the design phase. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to file issues and propose changes, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations.
+
+To report a security concern, see [SECURITY.md](SECURITY.md).
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

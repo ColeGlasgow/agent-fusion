@@ -1,0 +1,39 @@
+name: Design proposal
+description: Propose a design or architectural change. Use this before opening a PR for non-trivial work.
+labels: ["design"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One-paragraph description of what you're proposing.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve, and why now?
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed design
+      description: Sketch the design. Include interfaces, data flow, and any new components.
+    validations:
+      required: true
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Tradeoffs and alternatives
+      description: What did you consider and reject, and why?
+    validations:
+      required: false
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open questions
+      description: Anything you'd like reviewer input on before implementing.
+    validations:
+      required: false
