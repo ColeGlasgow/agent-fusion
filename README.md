@@ -8,6 +8,21 @@ A unified multi-agent orchestration framework that routes coding tasks between C
 
 ---
 
+## At a glance
+
+| Field             | Value                                                           |
+| ----------------- | --------------------------------------------------------------- |
+| Purpose           | Route coding tasks between Claude Code and OpenAI Codex         |
+| Stage             | Design phase (no runtime code yet)                              |
+| Language          | Python 3.10+                                                    |
+| Package layout    | `src/agent_fusion/` (planned)                                   |
+| Entry point       | `agent_fusion.cli:main` (planned)                               |
+| Build system      | `pyproject.toml` (planned)                                      |
+| External services | Anthropic API (Claude), OpenAI API (Codex/GPT)                  |
+| Required secrets  | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`                           |
+| Agent guide       | [AGENTS.md](AGENTS.md)                                          |
+| Glossary          | [docs/GLOSSARY.md](docs/GLOSSARY.md)                            |
+
 ## Project status
 
 agent-fusion is in the **design phase**. This repository currently contains the project vision, target architecture, and planned structure. No runtime code is implemented yet. Issues, design discussion, and proposals are welcome — see [Contributing](#contributing).
@@ -134,6 +149,20 @@ agent-fusion draws on ideas from existing open-source agent projects:
 - [AgenticGoKit/AgenticGoKit](https://github.com/AgenticGoKit/AgenticGoKit) — LLM-agnostic, event-driven agent patterns
 - [unixzii/little-agent](https://github.com/unixzii/little-agent) — lightweight embedded agent framework
 - [Protocol-Lattice/go-agent](https://github.com/Protocol-Lattice/go-agent) — graph-aware memory and orchestration
+
+---
+
+## For AI coding agents
+
+If you are an AI coding agent (Claude Code, Codex, Cursor, Aider, etc.) working on this repository, read [AGENTS.md](AGENTS.md) **before making changes**. It defines:
+
+- The repo's current stage and what kinds of changes are in scope.
+- The package layout, entry points, and where new code belongs.
+- Build, test, and lint commands once they are wired up.
+- Conventions to follow (Python style, commit messages, no emojis in source or docs).
+- Hard rules to never violate (no fabricated APIs, no speculative abstractions, no destructive git operations without explicit approval).
+
+For domain terms used throughout the codebase (`router`, `planner`, `tool`, `hook`, `agent`, `memory tier`), see [docs/GLOSSARY.md](docs/GLOSSARY.md).
 
 ---
 
