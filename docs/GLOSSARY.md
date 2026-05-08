@@ -22,7 +22,26 @@ The structured value returned by `Agent.run`. Carries the output, the agent name
 
 ## Router
 
-The component that maps an incoming task to a specific agent. Combines deterministic rules (`config/routing_rules.yaml`) with a lightweight LLM-based classifier as a fallback. The router is stateless; it reads task metadata and returns an agent name.
+The component that maps an incoming task to a specific agent **and** a skill profile. Combines deterministic rules (`config/routing_rules.yaml`) with a lightweight LLM-based classifier as a fallback. The router is stateless; it reads task metadata and returns a `RouteDecision(agent_or_model, skill)`. When a chosen skill declares `preferred_models`, the router treats that ranked list as a hint and uses the highest-priority available model unless a rule overrides it.
+
+## Skill
+
+A bundle of rules, success criteria, tool allowlist, and optional model preferences that defines *how* a particular kind of work should be done (e.g. PR review, frontend component work, data-platform SQL). Skills are authored as Markdown files with YAML frontmatter — same shape as Anthropic's Claude Code skills — and live under `skills/` at the repo root. Skills are content, not code.
+
+When the router picks a skill for a task, the agent runs with the skill's body composed into the system prompt and the skill's tool allowlist applied.
+
+## Skill registry
+
+The runtime index of available skills. Loaded by `src/agent_fusion/skills/` from the `skills/` directory plus any user-configured additional skill directories. The registry validates frontmatter against the schema, resolves name conflicts, and exposes lookup by name or capability tag.
+
+## Tool tier
+
+The default access level a skill has to a given tool. Tools are grouped into tiers:
+
+- **Read tier** — filesystem read, grep/glob, web search, shell read-only commands. Available to every skill by default; the model needs these to gather context.
+- **Write tier** — filesystem write, shell exec, network POST, git mutations, code execution. Off by default. A skill must list specific write-tier tools in `allowed_tools` to use them.
+
+Tool tiers exist so that skills don't have to redeclare baseline read access while destructive capabilities still require explicit opt-in. See `src/agent_fusion/tools/` for the registry and tier definitions.
 
 ## Planner
 
