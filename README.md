@@ -20,6 +20,7 @@ A unified multi-agent orchestration framework that routes coding tasks between C
 | Build system      | `pyproject.toml` (planned)                                      |
 | External services | Anthropic API (Claude), OpenAI API (Codex/GPT)                  |
 | Required secrets  | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`                           |
+| Skill format      | Markdown + YAML frontmatter, see [docs/SKILL_AUTHORING.md](docs/SKILL_AUTHORING.md) |
 | Agent guide       | [AGENTS.md](AGENTS.md)                                          |
 | Glossary          | [docs/GLOSSARY.md](docs/GLOSSARY.md)                            |
 
@@ -33,13 +34,19 @@ The roadmap below tracks what lands first.
 
 ## Vision
 
-Today's AI coding agents are powerful but siloed. Claude Code is strong at long-context reasoning, code review, and architectural judgment; OpenAI Codex (and GPT-class completion models) is strong at fast generation, scaffolding, and pattern completion. agent-fusion treats these as complementary tools and provides:
+Different LLMs are good at different jobs, and the same LLM does its best work when it's given the right rules, conventions, and tools for the task at hand. agent-fusion is built around two pillars:
 
-- A **task router** that picks the right agent for each unit of work based on task type, context size, and cost.
-- A **shared tool layer** so both agents call the same shell, filesystem, and web tools.
+1. **Routing** — for each task, pick the agent that's best at *this kind* of work (code review vs. scaffolding vs. refactor vs. data-platform SQL, etc.).
+2. **Skills** — once the agent is chosen, run the task under a *skill profile* that supplies the rules, success criteria, and tool allowlist optimized for that domain. Skills are the difference between "the model wrote some code" and "the model wrote code that follows the conventions and quality bar this kind of work demands."
+
+Around these two pillars sit the supporting components:
+
+- A **shared tool layer** so every agent calls the same shell, filesystem, and web tools through a uniform interface.
 - A **shared memory layer** so context survives handoffs between agents.
 - **Parallel execution** for independent subtasks, with result merging.
 - **Human-in-the-loop gates** for high-stakes or destructive actions.
+
+Skills are content, not code: each skill is a Markdown file with YAML frontmatter (the same shape Anthropic uses for Claude Code skills). That makes skills easy to author, review, version, and share — and over time the skills directory becomes a curated library of best practices for different kinds of work.
 
 ---
 
@@ -54,14 +61,23 @@ Today's AI coding agents are powerful but siloed. Claude Code is strong at long-
                     ┌──────▼───────┐
                     │    Router    │
                     │ rules + LLM  │
-                    └──┬────────┬──┘
-                       │        │
-              ┌────────▼──┐  ┌──▼─────────┐
-              │  Claude   │  │  Codex     │
-              │  wrapper  │  │  wrapper   │
-              └────────┬──┘  └──┬─────────┘
-                       │        │
-                    ┌──▼────────▼──┐
+                    └──────┬───────┘
+                           │  selects (agent, skill)
+                           │
+                    ┌──────▼───────┐
+                    │    Skill     │  ◄── skills/*.md
+                    │   profile    │      rules · tools
+                    │              │      criteria · model
+                    └──────┬───────┘
+                           │  composes prompt + tool allowlist
+                           │
+                ┌──────────▼──────────┐
+                │   Agent execution   │
+                │  Claude · Codex ·   │
+                │  (future agents)    │
+                └──────────┬──────────┘
+                           │
+                    ┌──────▼───────┐
                     │  Tool layer  │
                     │ shell · fs · │
                     │   web · api  │
@@ -86,13 +102,16 @@ agent-fusion/
 ├── src/agent_fusion/
 │   ├── agents/          # Agent wrappers (Claude, Codex, base class)
 │   ├── router/          # Task classification and routing
+│   ├── skills/          # Skill loader, registry, schema validation
 │   ├── planner/         # Task decomposition and DAG
 │   ├── tools/           # Shared tool layer (shell, fs, web, etc.)
 │   ├── memory/          # Working, episodic, and vector memory
 │   ├── hooks/           # Pre/post hooks (logging, cost, safety)
 │   └── cli/             # CLI entrypoint
+├── skills/              # Skill files (Markdown + YAML frontmatter) — content, not code
 ├── tests/               # Unit and integration tests
 ├── docs/                # Architecture and contributor docs
+│   └── SKILL_AUTHORING.md
 ├── config/              # Default configuration files
 ├── examples/            # Example tasks and notebooks
 ├── .github/             # Issue templates, PR template, workflows
@@ -100,6 +119,8 @@ agent-fusion/
 ├── LICENSE
 └── README.md
 ```
+
+`skills/` is content, not code. Each file describes how a specific kind of work should be done; the framework loads and applies skills at runtime. See [docs/SKILL_AUTHORING.md](docs/SKILL_AUTHORING.md) for the format.
 
 The `src/` layout is intentional: it keeps the importable package isolated from repo tooling and prevents accidental imports from the working directory during tests.
 
@@ -109,35 +130,41 @@ The `src/` layout is intentional: it keeps the importable package isolated from 
 
 Milestones are tracked as GitHub issues once filed. The current ordering:
 
-1. Base agent interface and Claude/Codex wrappers
-2. Rule-based task router with a small classifier fallback
-3. Shared tool layer (shell, filesystem, web search)
-4. Working and episodic memory
-5. Hook system (logging, cost tracking, safety gates)
-6. CLI entrypoint
-7. Parallel execution and result merging
-8. Vector memory and semantic recall
-9. MCP-compatible tool definitions
-10. Additional agents (Gemini, local models via Ollama)
+1. Skill schema, loader, and registry (Markdown + YAML frontmatter)
+2. Shared tool layer (shell, filesystem, web search) with read/write tier defaults
+3. Base agent interface and Claude/Codex wrappers
+4. Rule-based task router with a small classifier fallback — output is `(agent, skill)`
+5. Starter skill library (PR review, frontend, backend, data-platform SQL, etc.)
+6. Hook system (logging, cost tracking, safety gates)
+7. CLI entrypoint
+8. Working and episodic memory
+9. Parallel execution and result merging
+10. Vector memory and semantic recall
+11. MCP-compatible tool definitions
+12. Additional agents (Gemini, local models via Ollama)
 
 ---
 
 ## Routing intent
 
-The router will combine deterministic rules with a lightweight classifier. Initial heuristics:
+The router output is `(agent_or_model, skill)`. It combines deterministic rules with a lightweight classifier, and respects each skill's `preferred_models` field as a ranked hint when selecting the model.
 
-| Task type                       | Preferred agent | Reason                            |
-| ------------------------------- | --------------- | --------------------------------- |
-| Code review / security audit    | Claude          | Long context, deep reasoning      |
-| Architecture decisions          | Claude          | Multi-factor reasoning            |
-| Bug analysis with stack trace   | Claude          | Root-cause inference              |
-| Large codebase understanding    | Claude          | Long-context window               |
-| Rapid code generation           | Codex           | Optimized for completion          |
-| Boilerplate and scaffolding     | Codex           | Fast and economical               |
-| Unit test generation            | Codex           | Pattern completion                |
-| Quick autocomplete-style edits  | Codex           | Low latency                       |
+Initial heuristics — these become routing rules in `config/routing_rules.yaml` and inform the matching skill's `preferred_models`:
 
-Rules will be overridable via configuration.
+| Task type                       | Preferred agent | Likely skill              | Reason                       |
+| ------------------------------- | --------------- | ------------------------- | ---------------------------- |
+| Code review / security audit    | Claude          | `pr-review`               | Long context, deep reasoning |
+| Architecture decisions          | Claude          | `architecture`            | Multi-factor reasoning       |
+| Bug analysis with stack trace   | Claude          | `bug-fix`                 | Root-cause inference         |
+| Large codebase understanding    | Claude          | `codebase-survey`         | Long-context window          |
+| Rapid code generation           | Codex           | `scaffolding`             | Optimized for completion     |
+| Boilerplate and scaffolding     | Codex           | `scaffolding`             | Fast and economical          |
+| Unit test generation            | Codex           | `unit-tests`              | Pattern completion           |
+| Quick autocomplete-style edits  | Codex           | `quick-edit`              | Low latency                  |
+| Frontend component work         | (skill-pinned)  | `frontend`                | Domain-specific conventions  |
+| Data platform SQL / dbt         | (skill-pinned)  | `data-platform-sql`       | Domain-specific conventions  |
+
+Rules are overridable via configuration. Skills may also pin a preferred model, which the router treats as a hint unless rules override.
 
 ---
 

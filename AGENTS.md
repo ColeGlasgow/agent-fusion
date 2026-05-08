@@ -22,6 +22,8 @@ If a request asks you to implement something not on the roadmap or not yet desig
 
 | Concern                              | Location                              |
 | ------------------------------------ | ------------------------------------- |
+| Skill files (content)                | `skills/`                             |
+| Skill loader, registry, schema       | `src/agent_fusion/skills/`            |
 | Agent wrappers (Claude, Codex, base) | `src/agent_fusion/agents/`            |
 | Task router and classifier           | `src/agent_fusion/router/`            |
 | Task decomposition / DAG             | `src/agent_fusion/planner/`           |
@@ -32,8 +34,11 @@ If a request asks you to implement something not on the roadmap or not yet desig
 | Default config                       | `config/`                             |
 | Tests (mirror `src/` layout)         | `tests/`                              |
 | Architecture / design docs           | `docs/`                               |
+| Skill authoring guide                | `docs/SKILL_AUTHORING.md`             |
 | Domain glossary                      | `docs/GLOSSARY.md`                    |
 | Issue and PR templates               | `.github/`                            |
+
+Skills are content, not code. Authoring a new skill means adding a Markdown file under `skills/`, not a Python module under `src/`. See [docs/SKILL_AUTHORING.md](docs/SKILL_AUTHORING.md) for the format.
 
 When introducing a new module, place it in the directory that matches the planned architecture rather than inventing a new top-level folder. If nothing fits, open a design issue first.
 
