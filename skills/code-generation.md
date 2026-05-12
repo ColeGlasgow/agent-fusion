@@ -11,8 +11,10 @@ success_criteria:
   - Existing project style and conventions have been matched, not overridden
   - Tests cover the new behavior and would fail if the change were reverted
   - Security-sensitive boundaries (input, auth, secrets, persistence) are handled explicitly
-  - Comments, if present, explain why; names communicate intent
+  - The unhappy path is handled — errors caught narrowly, resources closed deterministically
+  - Names communicate intent; comments, if any, explain why
   - Uncertainty has been surfaced, not hidden behind plausible-sounding code
+  - Documentation invalidated by the change has been updated in the same commit
 tags:
   - coding
   - quality
@@ -33,29 +35,21 @@ Writing new code, modifying existing code, or producing a code change in respons
 
 2. **Write the minimum code that solves the stated problem.** Nothing speculative. No "we might need this later" abstractions, configuration knobs nobody requested, or interfaces with one implementation. Complexity earned by a current requirement is fine; complexity for a hypothetical future is not.
 
-3. **Match existing project style and conventions.** Read a neighboring file before writing a new one. Follow the linter and style guide that the project already enforces. If your preference conflicts with the project, the project wins.
+3. **Match existing project style and conventions.** Read a neighboring file before writing a new one. Follow the linter and style guide the project already enforces. If your preference conflicts with the project, the project wins.
 
-4. **Keep the change small and self-contained.** One logical change per commit. Do not "improve" adjacent code, fix unrelated formatting, or refactor things that are not broken. Roughly 100 lines is comfortable; 1000 lines is a sign the change should be split.
+4. **Do not enlarge scope beyond what the task asked for.** One logical change per commit. Do not fix unrelated issues, reformat untouched code, or refactor things that are not broken. Note unrelated problems for a follow-up; do not include them.
 
 5. **Write tests that would fail if the change were reverted.** A test exercising only the pre-existing success path is decoration. The test must directly cover the new behavior — new branch, new error case, new output — so reverting the production change breaks the test.
 
 6. **Handle security at every system boundary.** Input from users, network, or files must be validated. Secrets are never hardcoded. SQL and shell commands are parameterized, not interpolated. Auth, crypto, deserialization, and file paths get explicit attention or an explicit `TODO` flag. Do not invent crypto.
 
-7. **Names communicate intent; comments explain *why*.** Use descriptive names long enough to be self-evident in the scope they live in. Reserve comments for non-obvious context — a constraint, an invariant, a workaround — not for paraphrasing the next line of code.
+7. **Names communicate intent; comments explain *why*; no magic literals.** Use descriptive names long enough to be self-evident in their scope. Reserve comments for non-obvious context — a constraint, an invariant, a workaround — not for paraphrasing the next line. A literal that carries meaning (`86400`, `"admin"`, `0x1F`) gets a named constant; trivially obvious values (`0`, `1`, empty string) do not.
 
-8. **Catch narrowly; never swallow errors silently.** Catch the specific exception you can recover from, at the layer that can recover. A bare `except:`, `catch (Exception e)` swallowing everything, or `try { ... } catch { }` with an empty body hides real bugs and is grounds to reject the change.
+8. **Handle the unhappy path explicitly.** Catch the specific exception you can recover from, at the layer that can recover — never `except:`, never empty `catch` blocks, never swallow errors silently. Files, sockets, locks, transactions, and database connections must close on every path including errors; use the language's resource-scoping construct (context manager, `using`, RAII, `defer`, `try-with-resources`), not garbage collection.
 
-9. **Manage resources explicitly.** Files, sockets, locks, transactions, and database connections must close on every path — including errors. Use the language's resource-scoping construct (context manager, `using`, RAII, `defer`, `try-with-resources`); do not rely on garbage collection.
+9. **Functions stay focused.** One responsibility per function. Roughly 40 lines is a soft ceiling — past it, the function is usually doing two things and should be split. Long parameter lists are the same signal.
 
-10. **No magic numbers or strings.** A literal that carries meaning (`86400`, `"admin"`, `0x1F`) gets a named constant. The exception is values whose meaning is obvious in context (`0`, `1`, `-1`, empty string, single-use format keys).
-
-11. **Functions stay focused.** One responsibility per function. Roughly 40 lines is a soft ceiling — past it, the function is usually doing two things and should be split. Long parameter lists are the same signal.
-
-12. **No mutable global state.** Module-level mutable variables create implicit contracts between distant callers and break under concurrency or repeated test runs. Pass state explicitly or scope it to a class or context manager.
-
-13. **Surface uncertainty; do not paper over it.** If a requirement is ambiguous, state the assumption and ask. If an API contract is unknown, read it or say so. Plausible-sounding code generated under uncertainty is worse than a question, because it looks like a working answer.
-
-14. **Update the documentation that the change invalidates.** Public function signatures, README usage, configuration tables, and CL/PR descriptions that describe the now-changed behavior must be updated in the same commit. Out-of-date docs are worse than no docs.
+10. **Surface uncertainty; do not paper over it.** If a requirement is ambiguous, state the assumption and ask. If an API contract is unknown, read it or say so. Plausible-sounding code generated under uncertainty is worse than a question, because it looks like a working answer.
 
 ## Process
 
@@ -63,10 +57,11 @@ Writing new code, modifying existing code, or producing a code change in respons
 2. **Read the surrounding code.** Open the file you will modify and at least one neighboring file. Identify existing conventions.
 3. **Identify the minimum surface.** What files must change? What can stay the same? Resist enlarging the surface.
 4. **Plan the change.** A 1–5 line plan stating files, what changes in each, and what tests will prove it works.
-5. **Write the change.** Apply Rules 1–14 as you go.
-6. **Write or update tests.** Apply Rule 5 — run the test mentally with the change reverted; it should fail.
-7. **Verify `success_criteria`.** Each item answerable with "yes."
-8. **Summarize in the output format below.**
+5. **Write the change.** Apply Rules 1–10 as you go.
+6. **Write or update tests.** Apply Rule 5 — mentally run the test against the reverted code; it should fail.
+7. **Update invalidated documentation.** Signatures, READMEs, config tables, CL descriptions.
+8. **Verify `success_criteria`.** Each item answerable with "yes."
+9. **Summarize in the output format below.**
 
 ## Output format
 
@@ -116,7 +111,7 @@ class NameFormatter:
         # ... locale handling, fallback handling, etc.
 ```
 
-Why this fails: a class, four configuration knobs, two order modes, and locale handling — none of which were asked for. Single caller, single format. Violates Rule 2 (minimum code) and Rule 11 (focus).
+Why this fails: a class, four configuration knobs, two order modes, and locale handling — none of which were asked for. Single caller, single format. Violates Rule 2 (minimum code) and Rule 9 (focus).
 
 **Correct pattern:**
 
@@ -142,7 +137,7 @@ def get_order(order_id: str):
     return db.execute(query).fetchone()
 ```
 
-Why this fails: `order_id` is user input interpolated directly into SQL. An attacker sends `1' OR '1'='1` and reads every row. The `try/except` is also missing — a malformed ID will surface a stack trace to the client. Violates Rule 6 (security at boundaries) and Rule 8 (narrow error handling, when added).
+Why this fails: `order_id` is user input interpolated directly into SQL. An attacker sends `1' OR '1'='1` and reads every row. Errors are also unhandled — a malformed ID surfaces a stack trace to the client. Violates Rule 6 (security at boundaries) and Rule 8 (handle the unhappy path).
 
 **Correct pattern:**
 
@@ -164,4 +159,4 @@ def get_order(order_id: str) -> Order:
     return Order.from_row(row)
 ```
 
-Why this works: input is validated against a known pattern (Rule 6), the query uses a parameter binding the driver escapes (Rule 6), the `except` catches only `DatabaseError` so unrelated bugs still surface (Rule 8), and the not-found case is distinct from the error case so the client sees the right status.
+Why this works: input is validated against a known pattern (Rule 6), the query uses parameter binding the driver escapes (Rule 6), the `except` catches only `DatabaseError` so unrelated bugs still surface (Rule 8), and the not-found case is distinct from the error case so the client sees the right status.
