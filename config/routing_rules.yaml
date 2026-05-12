@@ -1,0 +1,18 @@
+rules:
+  - name: pr-review-tasks
+    when:
+      description_matches: "(?i)\\b(review|pr|pull request|code review)\\b"
+    then:
+      skill: pr-review
+
+  - name: debugging-tasks
+    when:
+      description_matches: "(?i)\\b(bug|broken|failing|error|crash|debug|fix)\\b"
+    then:
+      skill: debugging
+
+  - name: default-coding
+    when:
+      always: true
+    then:
+      skill: code-generation
