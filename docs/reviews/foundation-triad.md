@@ -9,7 +9,7 @@
 ### Blockers
 
 - `skills/pr-review.md:13` — **blocker:** The success criteria require "The CL description has been verified for clarity," but the skill's trigger includes any "code diff, or proposed change" at `skills/pr-review.md:27`. A standalone diff may not have a CL description, so the agent cannot honestly answer every success criterion with "yes" as required by `skills/pr-review.md:67`.
-- `skills/pr-review.md:88` — **blocker:** The output format requires "one or two specific positives," and `skills/pr-review.md:92` says to always include `Things done well`. That can force the reviewer to invent praise when no specific positive is present, which conflicts with the repository hard rule against fabrication.
+- `skills/pr-review.md:88` — **blocker:** The output format requires "one or two specific positives," and `skills/pr-review.md:92` says to always include `Things done well`. That can force the reviewer to invent praise when no specific positive is present, which conflicts with the narrower "when you see one" condition in `skills/pr-review.md:53`.
 
 ### Suggestions
 
