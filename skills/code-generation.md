@@ -161,3 +161,98 @@ def get_order(order_id: str) -> Order:
 ```
 
 Why this works: input is validated against a known pattern (Rule 6), the query uses parameter binding the driver escapes (Rule 6), the `except` catches only `DatabaseError` so unrelated bugs still surface (Rule 8), and the not-found case is distinct from the error case so the client sees the right status.
+
+---
+
+### Example 3: hallucinated API call
+
+Task: "Use the OpenAI SDK to generate an embedding for the given text."
+
+**Common AI failure:**
+
+```python
+from openai import OpenAI
+
+client = OpenAI()
+
+def embed(text: str) -> list[float]:
+    response = client.embeddings.generate(
+        model="text-embedding-3-small",
+        input=text,
+    )
+    return response.data[0].embedding
+```
+
+Why this fails: `client.embeddings.generate(...)` does not exist. The real method is `client.embeddings.create(...)`. The wrong verb is plausible — chat completions use `.create()`, the conceptual action is "generate an embedding," and the LLM interpolates the obvious-sounding name. The code raises `AttributeError` at runtime. The import, model name, and response shape are all correct; only the function call is hallucinated. Violates Rule 1 (verify the API before calling it).
+
+**Correct pattern:**
+
+```python
+from openai import OpenAI
+
+client = OpenAI()
+
+def embed(text: str) -> list[float]:
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text,
+    )
+    return response.data[0].embedding
+```
+
+Why this works: confirmed against the installed package's actual method signature (`pip show openai` → check the version, then the SDK reference) before writing. The cheap check that prevents this entire class of bug: open the dependency's source or docs for the exact version pinned in `pyproject.toml` / `package.json` / `go.mod`, and confirm the method exists with those argument names. "Looks right" is not the same as "exists."
+
+---
+
+### Example 4: a test that doesn't actually test the change
+
+Task: "`deliver_email()` should retry up to 3 times on `TransientError`, then re-raise."
+
+**Common AI failure:**
+
+```python
+# Production change:
+def deliver_email(message: Message) -> Response:
+    for attempt in range(3):
+        try:
+            return _send(message)
+        except TransientError:
+            continue
+    raise
+
+# New test:
+def test_deliver_email_returns_response():
+    result = deliver_email(Message(to="user@example.com", body="hi"))
+    assert result is not None
+```
+
+Why this fails: this test passes whether or not the retry loop exists. Delete `for attempt in range(3):` and the test still passes, because it only exercises the success path that already worked. The change is untested. CI is green; the retry behavior could be broken or absent and nobody would know until production. Violates Rule 5 (the test must fail when the change is reverted).
+
+**Correct pattern:**
+
+```python
+def test_deliver_email_retries_on_transient_error(mocker):
+    send = mocker.patch("emails.deliver._send")
+    send.side_effect = [
+        TransientError("network blip"),
+        TransientError("network blip"),
+        Response(id="msg-1"),
+    ]
+
+    result = deliver_email(Message(to="user@example.com", body="hi"))
+
+    assert result.id == "msg-1"
+    assert send.call_count == 3
+
+
+def test_deliver_email_raises_after_3_failures(mocker):
+    send = mocker.patch("emails.deliver._send")
+    send.side_effect = TransientError("network blip")
+
+    with pytest.raises(TransientError):
+        deliver_email(Message(to="user@example.com", body="hi"))
+
+    assert send.call_count == 3
+```
+
+Why this works: the first test forces two failures before success and asserts `_send` was called three times — remove the retry and it fails immediately. The second test covers the give-up case — the new behavior is "retry, then re-raise," and re-raising is half the contract. The forcing question Rule 5 is asking is "would this test fail if I deleted the change?" Both tests answer yes.
