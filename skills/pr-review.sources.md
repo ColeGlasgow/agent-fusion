@@ -38,5 +38,6 @@ Audit trail for `pr-review.md`. Not loaded at runtime. Update this file whenever
 ## Notes
 
 - The original draft included a "respond within one business day" rule sourced to Google's *Speed of Code Reviews*. Cut from the runtime skill because an LLM responds instantly — the rule is irrelevant to the agent and was costing tokens on every load.
+- PR #11's audit made `Things done well` conditional on at least one specific positive; this changes only the output-format guardrail, not Rule 12's source.
 - Microsoft's Playbook explicitly defers to Google on most review topics. Treat Google as the canonical reference; Microsoft signal is "Google says this and a second large org agreed."
 - OWASP's current rendered page (owasp.org/Top10/) redirects to the 2025 edition. The rule cites the resource, not a specific category list, so it stays stable across yearly updates.

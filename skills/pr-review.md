@@ -89,7 +89,7 @@ Reviewing a pull request, code diff, or proposed change in any language. Not for
 - <one or two specific positives>
 ```
 
-Omit empty sections. Always include `Summary` and `Things done well`.
+Omit empty sections. Always include `Summary`; include `Things done well` only when at least one specific positive exists.
 
 ## Examples
 

@@ -42,7 +42,7 @@ Writing new code, modifying existing code, or producing a code change in respons
 
 5. **Write tests that would fail if the change were reverted.** A test exercising only the pre-existing success path is decoration. The test must directly cover the new behavior — new branch, new error case, new output — so reverting the production change breaks the test.
 
-6. **Handle security at every system boundary.** Input from users, network, or files must be validated. Secrets are never hardcoded. SQL and shell commands are parameterized, not interpolated. Auth, crypto, deserialization, and file paths get explicit attention or an explicit `TODO` flag. Do not invent crypto.
+6. **Handle security at every system boundary.** Input from users, network, or files must be validated. Secrets are never hardcoded. SQL and shell commands are parameterized, not interpolated. Auth, crypto, deserialization, and file paths get explicit attention. If you cannot handle a boundary, surface that in `Assumptions and uncertainty` instead of leaving a `TODO` in production code. Do not invent crypto.
 
 7. **Names communicate intent; comments explain *why*; no magic literals.** Use descriptive names long enough to be self-evident in their scope. Reserve comments for non-obvious context — a constraint, an invariant, a workaround — not for paraphrasing the next line. A literal that carries meaning (`86400`, `"admin"`, `0x1F`) gets a named constant; trivially obvious values (`0`, `1`, empty string) do not.
 

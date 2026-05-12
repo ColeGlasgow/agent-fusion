@@ -14,7 +14,7 @@ success_criteria:
   - Recent changes (git log, deploys, config) were checked before deep investigation
   - The error message and stack trace were read in full, not pattern-matched
   - The fix has been verified by re-running the reproduction
-  - A regression test has been added that fails against the original buggy code
+  - Code root causes have a regression test that fails against the original buggy code; operational or configuration root causes have a written remediation note
   - Correlation was not treated as causation when multiple things changed together
 tags:
   - debugging
@@ -50,7 +50,7 @@ A reported bug, a failing test, an incident, or any "this isn't working the way 
 
 9. **Verify the fix actually fixed it.** Re-run the exact reproduction from Rule 1 and confirm the failure is gone. "It should work now" is not a fix; "I re-ran the failing case and it passes" is. If the reproduction was intermittent, run it enough times to be statistically confident.
 
-10. **Add a regression test that fails against the original buggy code.** The bug got past the test suite; the suite has a gap. The fix is not complete until that gap is closed by a test which would have caught the bug before it shipped. Mentally revert your fix — the new test must fail.
+10. **Add a regression test for code root causes.** When the root cause is in code, the fix is not complete until a test closes the gap and would fail against the original buggy code. For operational or configuration root causes, write a remediation note in the output instead of forcing a code-level test.
 
 ## Process
 
@@ -64,7 +64,7 @@ A reported bug, a failing test, an incident, or any "this isn't working the way 
 8. **Identify the root cause.** Name it explicitly, in one sentence. If you cannot, you are not done.
 9. **Fix the cause.** The minimum change that addresses the root cause, not the symptom.
 10. **Verify with the reproduction from step 2.**
-11. **Add the regression test (Rule 10).**
+11. **Add the regression test or remediation note (Rule 10).**
 12. **Summarize in the output format below.**
 
 ## Output format
@@ -82,8 +82,11 @@ A reported bug, a failing test, an incident, or any "this isn't working the way 
 ## Fix
 - `path/to/file.ext` — <what changed and why this addresses the root cause>
 
+## Verification
+- <what was re-run, and the result>
+
 ## Regression test
-- `path/to/test.ext` — <what is asserted, and confirmation that this test fails against the original buggy code>
+- `path/to/test.ext` — <what is asserted, and confirmation that this test fails against the original buggy code; for operational or configuration root causes, write the remediation note here instead>
 
 ## Hypotheses tested and rejected
 - <hypothesis> — <how it was ruled out>

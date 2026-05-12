@@ -32,6 +32,7 @@ Audit trail for `debugging.md`. Not loaded at runtime. Update this file whenever
 ## Notes
 
 - Microsoft's Engineering Fundamentals Playbook does not have a dedicated debugging section. Its Observability content supports debugging but does not prescribe methodology. Noted here so the absence is intentional rather than an oversight.
+- PR #11's audit added explicit verification output and scoped Rule 10's regression-test requirement to code root causes; operational or configuration root causes now require a written remediation note.
 - Rules 2 and 9 are explicitly AI-failure-mode rules. They have weaker single-source citations because they address failure patterns the SRE canon predates (or treats as obvious enough not to belong to a separate rule). Flagged here honestly rather than over-claimed.
 - David Agans's *Debugging: The 9 Indispensable Rules* is the most-cited industry book on this topic and overlaps heavily with this skill. Deliberately not cited because the rules here were derived from the publicly readable Google SRE chapter plus AI-specific failure modes; Agans is acknowledged as parallel canon rather than a source.
 - `allowed_tools` declares `filesystem.write` (to apply fixes) and `shell.exec` (to actually run reproductions — Rule 1's reproduce-before-fixing requires execution, unlike `code-generation` where test execution is optional). The wider privilege footprint is intentional and earned by the workflow.
