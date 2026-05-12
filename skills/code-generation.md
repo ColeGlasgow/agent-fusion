@@ -4,7 +4,8 @@ description: Write new code or modify existing code to meet enterprise quality s
 preferred_models:
   - claude-opus
   - claude-sonnet
-allowed_tools: []
+allowed_tools:
+  - filesystem.write
 success_criteria:
   - Every API, import, and file path used has been verified to exist in the project or its declared dependencies
   - The change is the minimum necessary to solve the stated problem

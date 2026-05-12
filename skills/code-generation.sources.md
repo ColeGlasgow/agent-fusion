@@ -38,6 +38,7 @@ Audit trail for `code-generation.md`. Not loaded at runtime. Update this file wh
 
 ## Notes
 
+- Iteration 3 set `allowed_tools: [filesystem.write]` — required per the repo's tool tier system (`docs/SKILL_AUTHORING.md`); a code-generation skill that does not declare write permission cannot do its job. `shell.exec` deliberately omitted: running tests is a composition concern, not a permission this skill should carry.
 - Iteration 2 trimmed the rule list from 14 to 10. Cut Rule 12 ("no mutable global state") — Python-shaped and has known exceptions in Go and embedded contexts; belongs in language-specific skills. Merged old Rules 8+9 into a single "handle the unhappy path" rule. Merged old Rule 10 (no magic numbers) into Rule 7 as a clause. Moved old Rule 14 (update docs) into `success_criteria` and the Process step list, where it functions as a completion check rather than a generative directive.
 - Anthropic's published Claude Code best-practices URL (`docs.anthropic.com/.../best-practices`) was checked and currently returns a broken redirect chain. When it is available again, add it as cross-confirmation for Rules 1, 2, 10. Do not cite content that cannot be loaded.
 - Rules 1 and 10 are explicitly AI-failure-mode rules. They have weaker single-source citations because they address failure patterns the enterprise guides predate. Flagged honestly here rather than over-claimed.
