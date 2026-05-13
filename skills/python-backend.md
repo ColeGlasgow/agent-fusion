@@ -21,6 +21,8 @@ tags:
   - backend
   - api
   - web
+paths:
+  - "**/*.py"
 ---
 
 # Python backend

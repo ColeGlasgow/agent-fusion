@@ -20,6 +20,9 @@ tags:
   - frontend
   - ui
   - web
+paths:
+  - "**/*.tsx"
+  - "**/*.jsx"
 ---
 
 # Frontend (React)
