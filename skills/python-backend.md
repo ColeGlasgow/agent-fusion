@@ -130,3 +130,50 @@ async def login(body: LoginRequest) -> LoginResponse:
 ```
 
 Why this works: the request is validated through `LoginRequest` (Rule 2) — missing fields produce a 422 automatically, and `SecretStr` keeps the password out of logs and repr output. Bad credentials raise a 401 (Rule 3) so the edge can rate-limit and dashboards count it as failed. The success response is typed (Rule 1) and carries only the token, not a status envelope.
+
+---
+
+### Example 3: POST retry creates duplicates
+
+Task: "Add an endpoint that creates a payment for an order."
+
+**Common AI failure:**
+
+```python
+@app.post("/payments")
+async def create_payment(body: CreatePaymentRequest) -> Payment:
+    payment = await payments.insert(
+        order_id=body.order_id,
+        amount=body.amount,
+    )
+    await gateway.charge(payment)
+    return payment
+```
+
+Why this fails: this is a POST that creates a side effect, and nothing makes it safe to retry. The realistic failure path: the client's request times out after the charge succeeds but before the response is delivered. The client retries with the same body. The handler runs again, inserts a second payment, and charges the card a second time. The user is double-billed; reconciliation is manual. The handler obeys Rule 3's status-code clause but ignores its idempotency clause — POST is the verb where retry can create duplicates, which is exactly why it is the verb where you need an idempotency key.
+
+**Correct pattern:**
+
+```python
+@app.post("/payments")
+async def create_payment(
+    body: CreatePaymentRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+) -> Payment:
+    existing = await payments.find_by_idempotency_key(idempotency_key)
+    if existing is not None:
+        if existing.request_fingerprint != body.fingerprint():
+            raise HTTPException(status_code=409, detail="idempotency key reused with different body")
+        return existing
+
+    payment = await payments.insert(
+        order_id=body.order_id,
+        amount=body.amount,
+        idempotency_key=idempotency_key,
+        request_fingerprint=body.fingerprint(),
+    )
+    await gateway.charge(payment)
+    return payment
+```
+
+Why this works: the client supplies an `Idempotency-Key` header; the handler looks it up before doing any side effect, returns the prior result if it matches, and rejects with 409 if the same key is reused with a different body. A retry with the same key returns the original payment without re-charging. The dedup column is enforced by a unique index on `(idempotency_key)` in the schema so a race between two concurrent retries cannot both insert. POST is now safe to retry, satisfying Rule 3's idempotency clause without changing the verb.
