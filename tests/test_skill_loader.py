@@ -53,6 +53,24 @@ def test_code_generation_skill_declares_filesystem_write():
     assert "filesystem.write" in skill.allowed_tools
 
 
+def test_paths_frontmatter_loads_as_tuple(tmp_path: Path):
+    skill_path = tmp_path / "python-auto.md"
+    skill_path.write_text(
+        "---\n"
+        "name: python-auto\n"
+        "description: x\n"
+        "paths:\n"
+        "  - '**/*.py'\n"
+        "---\n"
+        "## When to use\nx\n## Rules\n1. x\n",
+        encoding="utf-8",
+    )
+
+    skill = load_skill(skill_path)
+
+    assert skill.paths == ("**/*.py",)
+
+
 def test_missing_required_field_is_rejected(tmp_path: Path):
     bad = tmp_path / "bad.md"
     bad.write_text(

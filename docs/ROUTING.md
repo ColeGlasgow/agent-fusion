@@ -81,6 +81,10 @@ When a rule matches, confidence is 1.0 (the rule is the user's stated intent). R
 
 If no rule matches and no `always: true` catch-all exists, the router falls through to Stage 3.
 
+### Skill paths and auto-attach
+
+If no explicit non-catch-all rule matches, the router checks task attachments against each skill's `paths` frontmatter globs before using an `always: true` catch-all. A matching path selects that skill with confidence 0.9 and records the matched glob in the decision reason. If multiple skills match, the longest matched glob wins as the most specific path rule; ties are broken alphabetically by skill name. If no skill path matches, routing continues to the catch-all or fallback behavior as usual.
+
 ### Stage 3: classifier inference (future)
 
 When rule-based matching is insufficient, a small classifier model reads the task description and the list of available skills (`name` + `description` from each skill's frontmatter) and returns its best guess.

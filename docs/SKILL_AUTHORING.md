@@ -78,6 +78,7 @@ Use this skill when the task is to review a pull request, code diff, or proposed
 | `success_criteria`| list[string]   | no       | Acceptance bar. The agent must verify these before declaring the task complete.                    |
 | `tags`            | list[string]   | no       | Free-form labels for grouping and discovery (`frontend`, `review`, `data`, etc.).                  |
 | `requires`        | list[string]   | no       | Other skill names this skill builds on. Their rules are composed in before this skill's body.      |
+| `paths`           | list[string]   | no       | File path globs that let the router auto-select this skill when matching files are attached.       |
 
 Unknown frontmatter fields are rejected at load time so typos surface immediately.
 
