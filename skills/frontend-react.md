@@ -12,7 +12,7 @@ success_criteria:
   - Every stored state value is independent; values derivable from props or state are computed during render
   - Every `useEffect` synchronizes with an external system and declares all reactive dependencies
   - Every rendered list uses stable unique keys from data, never array indexes or render-time generated values
-  - Every controlled form field pairs `value` or `checked` with a synchronous `onChange` and never switches control mode
+  - Each form field keeps exactly one source of truth for its value across the field's lifetime
   - User content is rendered through React text interpolation unless sanitized HTML is explicitly required at the trust boundary
   - Components stay focused enough to scan; large JSX blocks or hook-heavy components are split by responsibility
 tags:
@@ -28,13 +28,13 @@ Specialization of `code-generation` for React web frontends. The foundation rule
 
 ## When to use
 
-Writing or modifying a React web UI - components, hooks, forms, lists, client-side state, rendering logic, or browser-facing presentation code. Applies whether the app is built with Create React App, Vite, Next.js, or a custom React setup. Not for React Native, backend-only work, or non-React frontend code - those belong to a different specialization or to `code-generation` alone.
+Writing or modifying a React web UI — components, hooks, forms, lists, client-side state, rendering logic, or browser-facing presentation code. Applies whether the app is built with Create React App, Vite, Next.js, or a custom React setup. Not for React Native, backend-only work, or non-React frontend code — those belong to a different specialization or to `code-generation` alone.
 
 ## Rules
 
 1. **Derive state; do not store what can be computed.** `useState` is for independent facts that change over time, not for values you can calculate from props, loader data, URL state, or other state during render. Storing derived values creates two sources of truth, stale renders, and extra update paths. If the calculation is cheap, compute it inline; if it is expensive, use `useMemo` only after measuring or when the cost is obvious.
 
-2. **`useEffect` is the last resort.** Effects synchronize React with an external system - network, browser API, subscription, timer, third-party widget, analytics sink. Never use an Effect to derive render data and never use one to respond to a click, submit, or keystroke that has an event handler. When an Effect is justified, declare every reactive dependency and make cleanup mirror setup.
+2. **`useEffect` is the last resort.** Effects synchronize React with an external system — network, browser API, subscription, timer, third-party widget, analytics sink. Never use an Effect to derive render data and never use one to respond to a click, submit, or keystroke that has an event handler. When an Effect is justified, declare every reactive dependency and make cleanup mirror setup.
 
 3. **List keys are stable and unique, never the array index.** Keys identify the same logical item across renders. Use database IDs, persistent local IDs, or IDs created when the item is created. Do not use `key={i}`, `Math.random()`, `Date.now()`, or generated values during render. Index keys break state, focus, and animations when items reorder, insert, or delete.
 
@@ -42,7 +42,7 @@ Writing or modifying a React web UI - components, hooks, forms, lists, client-si
 
 5. **Escape user content; `dangerouslySetInnerHTML` requires sanitization at the trust boundary.** React text interpolation escapes by default; prefer `{user.name}` and normal children. Only render HTML when the product truly needs HTML semantics, and sanitize once at the boundary where untrusted content becomes trusted HTML. Never pass raw user input, Markdown output, CMS content, or API HTML directly into `dangerouslySetInnerHTML`.
 
-6. **Components stay small and focused.** Roughly 150 lines of JSX or 5 hooks is a soft ceiling - past it, split. Separate data loading, state transitions, form controls, list rows, and layout sections when they change for different reasons. A component should be easy to scan from props to returned JSX without tracking unrelated state machines in the same body.
+6. **Components stay small and focused.** Roughly 150 lines of JSX or 5 hooks is a soft ceiling — past it, split. Separate data loading, state transitions, form controls, list rows, and layout sections when they change for different reasons. A component should be easy to scan from props to returned JSX without tracking unrelated state machines in the same body.
 
 ## Examples
 
@@ -102,12 +102,15 @@ Task: "Render a todo list where users can delete completed items."
 **Common AI failure:**
 
 ```tsx
-export function TodoList({ todos, onDelete }) {
+export function TodoList({ todos, onToggle, onDelete }) {
   return (
     <ul>
       {todos.map((todo, i) => (
         <li key={i}>
-          <label><input type="checkbox" defaultChecked={todo.done} />{todo.title}</label>
+          <label>
+            <input type="checkbox" checked={todo.done} onChange={() => onToggle(todo.id)} />
+            {todo.title}
+          </label>
           <button onClick={() => onDelete(todo.id)}>Delete</button>
         </li>
       ))}
@@ -121,12 +124,15 @@ Why this fails: the key is the item's position, not the item. Delete the first t
 **Correct pattern:**
 
 ```tsx
-export function TodoList({ todos, onDelete }) {
+export function TodoList({ todos, onToggle, onDelete }) {
   return (
     <ul>
       {todos.map(todo => (
         <li key={todo.id}>
-          <label><input type="checkbox" defaultChecked={todo.done} />{todo.title}</label>
+          <label>
+            <input type="checkbox" checked={todo.done} onChange={() => onToggle(todo.id)} />
+            {todo.title}
+          </label>
           <button onClick={() => onDelete(todo.id)}>Delete</button>
         </li>
       ))}

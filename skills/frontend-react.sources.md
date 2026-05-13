@@ -1,4 +1,4 @@
-# frontend-react - sources
+# frontend-react — sources
 
 Audit trail for `frontend-react.md`. Not loaded at runtime. Update this file whenever a rule is added, changed, or removed.
 
@@ -6,27 +6,27 @@ Audit trail for `frontend-react.md`. Not loaded at runtime. Update this file whe
 
 ## References
 
-- **React docs - Choosing the State Structure** ([react.dev/learn/choosing-the-state-structure](https://react.dev/learn/choosing-the-state-structure)) - avoid redundant, duplicate, and contradictory state; calculate values from props or state during render when possible.
+- **React docs — Choosing the State Structure** ([react.dev/learn/choosing-the-state-structure](https://react.dev/learn/choosing-the-state-structure)) — avoid redundant, duplicate, and contradictory state; calculate values from props or state during render when possible.
 
-- **React docs - You Might Not Need an Effect** ([react.dev/learn/you-might-not-need-an-effect](https://react.dev/learn/you-might-not-need-an-effect)) - Effects are unnecessary for transforming render data or handling user events; derive during render or handle events directly.
+- **React docs — You Might Not Need an Effect** ([react.dev/learn/you-might-not-need-an-effect](https://react.dev/learn/you-might-not-need-an-effect)) — Effects are unnecessary for transforming render data or handling user events; derive during render or handle events directly.
 
-- **React docs - Separating Events from Effects** ([react.dev/learn/separating-events-from-effects](https://react.dev/learn/separating-events-from-effects)) - event handlers respond to specific interactions; Effects run when synchronization is needed.
+- **React docs — Separating Events from Effects** ([react.dev/learn/separating-events-from-effects](https://react.dev/learn/separating-events-from-effects)) — event handlers respond to specific interactions; Effects run when synchronization is needed.
 
-- **React API - `useEffect`** ([react.dev/reference/react/useEffect](https://react.dev/reference/react/useEffect)) - Effects synchronize with external systems, require declared reactive dependencies, and need cleanup that mirrors setup.
+- **React API — `useEffect`** ([react.dev/reference/react/useEffect](https://react.dev/reference/react/useEffect)) — Effects synchronize with external systems, require declared reactive dependencies, and need cleanup that mirrors setup.
 
-- **React docs - Rendering Lists** ([react.dev/learn/rendering-lists](https://react.dev/learn/rendering-lists)) - keys must be unique among siblings and stable; array indexes lead to confusing bugs when order changes.
+- **React docs — Rendering Lists** ([react.dev/learn/rendering-lists](https://react.dev/learn/rendering-lists)) — keys must be unique among siblings and stable; array indexes lead to confusing bugs when order changes.
 
-- **React DOM - `<input>`** ([react.dev/reference/react-dom/components/input](https://react.dev/reference/react-dom/components/input)) - controlled inputs cannot switch control mode and need synchronous `onChange` handlers.
+- **React DOM — `<input>`** ([react.dev/reference/react-dom/components/input](https://react.dev/reference/react-dom/components/input)) — controlled inputs cannot switch control mode and need synchronous `onChange` handlers.
 
-- **React DOM - Common components / `dangerouslySetInnerHTML`** ([react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html)) - raw HTML rendering requires extreme caution and trusted, sanitized data.
+- **React DOM — Common components / `dangerouslySetInnerHTML`** ([react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html)) — raw HTML rendering requires extreme caution and trusted, sanitized data.
 
-- **MDN - Cross-site scripting (XSS)** ([developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS)) - background on XSS risks and browser execution of injected content.
+- **MDN — Cross-site scripting (XSS)** ([developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS)) — background on XSS risks and browser execution of injected content.
 
-- **OWASP Cheat Sheet - Cross Site Scripting Prevention** ([cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)) - framework auto-escaping helps, escape hatches such as React's `dangerouslySetInnerHTML` require sanitization, and DOMPurify is recommended for HTML sanitization.
+- **OWASP Cheat Sheet — Cross Site Scripting Prevention** ([cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)) — framework auto-escaping helps, escape hatches such as React's `dangerouslySetInnerHTML` require sanitization, and DOMPurify is recommended for HTML sanitization.
 
-- **DOMPurify** ([github.com/cure53/DOMPurify](https://github.com/cure53/DOMPurify)) - concrete sanitizer used in the HTML example; cited as a representative approved sanitizer, not as a new repository dependency.
+- **DOMPurify** ([github.com/cure53/DOMPurify](https://github.com/cure53/DOMPurify)) — concrete sanitizer used in the HTML example; cited as a representative approved sanitizer, not as a new repository dependency.
 
-- **React docs - Components and Hooks must be pure** ([react.dev/reference/rules/components-and-hooks-must-be-pure](https://react.dev/reference/rules/components-and-hooks-must-be-pure)) - components and hooks should keep rendering pure and predictable.
+- **React docs — Components and Hooks must be pure** ([react.dev/reference/rules/components-and-hooks-must-be-pure](https://react.dev/reference/rules/components-and-hooks-must-be-pure)) — components and hooks should keep rendering pure and predictable.
 
 ## Rule-by-rule sourcing
 
