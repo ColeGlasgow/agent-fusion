@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Users/coleglasgow/claude-projects/agent-fusion/bench/runs/codex/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/coleglasgow/claude-projects/agent-fusion
+configfile: pyproject.toml
+plugins: anyio-4.12.1
+collecting ... collected 2 items
+
+bench/runs/codex/unskilled/test_main.py::test_create_task_success PASSED [ 50%]
+bench/runs/codex/unskilled/test_main.py::test_create_task_validation_failure PASSED [100%]
+
+============================== 2 passed in 0.52s ===============================
