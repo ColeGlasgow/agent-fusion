@@ -3,23 +3,40 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from collections.abc import Mapping
 from typing import Any
 
 import yaml
 
-READ_TIER_TOOLS = frozenset({
-    "filesystem.read", "grep", "glob", "web_search", "shell.read",
-})
-WRITE_TIER_TOOLS = frozenset({
-    "filesystem.write", "shell.exec", "network.post", "git.commit", "code_executor",
-})
+READ_TIER_TOOLS = frozenset(
+    {
+        "filesystem.read",
+        "grep",
+        "glob",
+        "web_search",
+        "shell.read",
+    }
+)
+WRITE_TIER_TOOLS = frozenset(
+    {
+        "filesystem.write",
+        "shell.exec",
+        "network.post",
+        "git.commit",
+        "code_executor",
+    }
+)
 
 REQUIRED_FIELDS = {"name", "description"}
 OPTIONAL_FIELDS = {
-    "preferred_models", "allowed_tools", "success_criteria", "tags", "requires", "paths",
+    "preferred_models",
+    "allowed_tools",
+    "success_criteria",
+    "tags",
+    "requires",
+    "paths",
 }
 KNOWN_FIELDS = REQUIRED_FIELDS | OPTIONAL_FIELDS
 
@@ -119,7 +136,7 @@ def _split_frontmatter(text: str, path: Path) -> tuple[str, str]:
     closing = text.find("\n" + FRONTMATTER_DELIMITER + "\n", len(FRONTMATTER_DELIMITER) + 1)
     if closing == -1:
         raise SkillValidationError(f"{path}: frontmatter is not closed with '---'")
-    return text[len(FRONTMATTER_DELIMITER) + 1:closing], text[closing + len(FRONTMATTER_DELIMITER) + 2:]
+    return text[len(FRONTMATTER_DELIMITER) + 1 : closing], text[closing + len(FRONTMATTER_DELIMITER) + 2 :]
 
 
 def _parse_yaml(frontmatter: str, path: Path) -> dict[str, Any]:
@@ -160,8 +177,7 @@ def _check_allowed_tools(tools: list[str], path: Path) -> None:
             )
         if tool not in WRITE_TIER_TOOLS:
             raise SkillValidationError(
-                f"{path}: unknown tool {tool!r} in allowed_tools; "
-                f"known write-tier tools are {sorted(WRITE_TIER_TOOLS)}"
+                f"{path}: unknown tool {tool!r} in allowed_tools; known write-tier tools are {sorted(WRITE_TIER_TOOLS)}"
             )
 
 
@@ -175,9 +191,7 @@ def _check_requires_graph(skills: dict[str, Skill]) -> None:
     for skill in skills.values():
         for dep in skill.requires:
             if dep not in skills:
-                raise SkillValidationError(
-                    f"{skill.source_path}: requires unknown skill {dep!r}"
-                )
+                raise SkillValidationError(f"{skill.source_path}: requires unknown skill {dep!r}")
     # Cycle detection via DFS.
     WHITE, GRAY, BLACK = 0, 1, 2
     color = {name: WHITE for name in skills}

@@ -138,9 +138,7 @@ rules:
 def test_pin_agent_and_pin_skill_return_both_at_confidence_1():
     router = _router()
 
-    decision = router.route(
-        Task(description="anything", pin_agent="codex-medium", pin_skill="debugging")
-    )
+    decision = router.route(Task(description="anything", pin_agent="codex-medium", pin_skill="debugging"))
 
     assert decision.agent == "codex-medium"
     assert decision.skill == "debugging"

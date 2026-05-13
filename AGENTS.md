@@ -10,8 +10,8 @@ This file follows the convention used by Claude Code (`CLAUDE.md`) and the broad
 
 - **Name:** agent-fusion
 - **Purpose:** Route coding tasks between Claude Code and OpenAI Codex via a shared tool, memory, and orchestration layer.
-- **Stage:** Design phase. No runtime code exists yet. Most agent work right now is documentation, design proposals, and scaffolding the first components on the roadmap.
-- **Language:** Python 3.10+
+- **Stage:** Active development. The skill loader, composition (`requires:`), router (pin + rule-based matching + path-based auto-attach), and a Claude Code exporter are shipped. The agent executor (running tasks through Claude/Codex) is the largest remaining gap.
+- **Language:** Python 3.11+
 - **License:** MIT
 
 If a request asks you to implement something not on the roadmap or not yet designed in an issue, **stop and ask the human** before writing code. Do not improvise architecture in this repo.
@@ -24,6 +24,7 @@ If a request asks you to implement something not on the roadmap or not yet desig
 | ------------------------------------ | ------------------------------------- |
 | Skill files (content)                | `skills/`                             |
 | Skill loader, registry, schema       | `src/agent_fusion/skills/`            |
+| Skill exporters (Claude Code, etc.)  | `src/agent_fusion/export/`            |
 | Agent wrappers (Claude, Codex, base) | `src/agent_fusion/agents/`            |
 | Task router and classifier           | `src/agent_fusion/router/`            |
 | Task decomposition / DAG             | `src/agent_fusion/planner/`           |
@@ -46,16 +47,17 @@ When introducing a new module, place it in the directory that matches the planne
 
 ## Build, test, lint
 
-These commands are reserved targets. They will be wired up as the project lands. Until they exist, prefer dry-run and document-only changes.
+| Action            | Command                            | Status   |
+| ----------------- | ---------------------------------- | -------- |
+| Install (dev)     | `pip install -e ".[dev]"`          | wired    |
+| Run tests         | `pytest tests/`                    | wired    |
+| Lint              | `ruff check src/ tests/`           | wired    |
+| Format check      | `ruff format --check src/ tests/`  | wired    |
+| Run all gates     | `bash scripts/verify.sh`           | wired    |
+| Type-check        | `mypy src`                         | planned  |
+| Run the CLI       | `agent-fusion --help`              | planned  |
 
-| Action            | Command (planned)        |
-| ----------------- | ------------------------ |
-| Install (dev)     | `pip install -e ".[dev]"` |
-| Run tests         | `pytest`                 |
-| Type-check        | `mypy src`               |
-| Lint              | `ruff check .`           |
-| Format            | `ruff format .`          |
-| Run the CLI       | `agent-fusion --help`    |
+`scripts/verify.sh` runs the wired gates in one command and is the same gate CI applies on every PR. Run it before pushing.
 
 If you add code, also add (or extend) the relevant command in `pyproject.toml` and update this table in the same PR.
 
@@ -159,11 +161,13 @@ If you find yourself inventing a synonym for any of these, stop and use the cano
 
 ## What "in scope" means right now
 
-Because the repo is in design phase, in-scope work is roughly:
+Active areas of work:
 
-1. Documentation and design proposals.
-2. The first roadmap milestone: base agent interface and Claude/Codex wrappers.
-3. Repo plumbing: `pyproject.toml`, lint/format/test config, CI workflows, release tooling.
+1. Skill content — new specializations, source citations, composition.
+2. Router improvements — additional condition types, classifier (Stage 3).
+3. Exporters for additional tools (Cursor, Cline, Continue.dev) following the Claude Code adapter pattern in `src/agent_fusion/export/`.
+4. The base agent interface and Claude/Codex wrappers — the largest remaining piece of the architecture.
+5. Repo plumbing — CI improvements, type checking, release tooling.
 
 Out of scope without explicit approval:
 

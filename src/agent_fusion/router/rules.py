@@ -4,7 +4,8 @@ import re
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Pattern
+from re import Pattern
+from typing import Any
 
 import yaml
 
@@ -34,7 +35,7 @@ class RoutingRule:
 
 def load_rules(path: Path) -> tuple[RoutingRule, ...]:
     if not path.exists():
-        warnings.warn(f"{path}: rules file missing; skipping rule-based routing", RuntimeWarning)
+        warnings.warn(f"{path}: rules file missing; skipping rule-based routing", RuntimeWarning)  # noqa: B028
         return ()
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))

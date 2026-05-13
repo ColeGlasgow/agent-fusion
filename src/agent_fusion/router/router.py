@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import fnmatch
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from agent_fusion.router.agent_registry import AgentRegistry
 from agent_fusion.router.rules import RoutingRule, load_rules
@@ -46,8 +47,8 @@ class Router:
             )
         matched = self._match_rules(task, include_always=False)
         path_match = None if matched is not None else self._match_skill_paths(task)
-        catch_all = None if matched is not None or path_match is not None else self._match_rules(
-            task, include_always=True
+        catch_all = (
+            None if matched is not None or path_match is not None else self._match_rules(task, include_always=True)
         )
         if task.pin_agent:
             skill = self._skill_from_match(matched, path_match, catch_all)

@@ -3,8 +3,7 @@
 A unified multi-agent orchestration framework that routes coding tasks between Claude Code and OpenAI Codex, choosing the right agent per task and coordinating shared tools, memory, and context.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Status: design phase](https://img.shields.io/badge/status-design%20phase-orange.svg)](#project-status)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
@@ -13,22 +12,17 @@ A unified multi-agent orchestration framework that routes coding tasks between C
 | Field             | Value                                                           |
 | ----------------- | --------------------------------------------------------------- |
 | Purpose           | Route coding tasks between Claude Code and OpenAI Codex         |
-| Stage             | Design phase (no runtime code yet)                              |
-| Language          | Python 3.10+                                                    |
-| Package layout    | `src/agent_fusion/` (planned)                                   |
-| Entry point       | `agent_fusion.cli:main` (planned)                               |
-| Build system      | `pyproject.toml` (planned)                                      |
+| Language          | Python 3.11+                                                    |
+| Skill loader      | Shipped — `src/agent_fusion/skills/` with `requires:` composition |
+| Router            | Shipped — pin, rule-based matching, path auto-attach            |
+| Skill library     | Shipped — `code-generation`, `pr-review`, `debugging`, `python-backend`, `frontend-react` |
+| Exporters         | Shipped — Claude Code, see [docs/EXPORT.md](docs/EXPORT.md)     |
+| Agent executor    | Planned — runtime that takes a `RouteDecision` and runs the task |
 | External services | Anthropic API (Claude), OpenAI API (Codex/GPT)                  |
 | Required secrets  | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`                           |
 | Skill format      | Markdown + YAML frontmatter, see [docs/SKILL_AUTHORING.md](docs/SKILL_AUTHORING.md) |
 | Agent guide       | [AGENTS.md](AGENTS.md)                                          |
 | Glossary          | [docs/GLOSSARY.md](docs/GLOSSARY.md)                            |
-
-## Project status
-
-agent-fusion is in the **design phase**. This repository currently contains the project vision, target architecture, and planned structure. No runtime code is implemented yet. Issues, design discussion, and proposals are welcome — see [Contributing](#contributing).
-
-The roadmap below tracks what lands first.
 
 ---
 
@@ -130,11 +124,11 @@ The `src/` layout is intentional: it keeps the importable package isolated from 
 
 Milestones are tracked as GitHub issues once filed. The current ordering:
 
-1. Skill schema, loader, and registry (Markdown + YAML frontmatter)
-2. Shared tool layer (shell, filesystem, web search) with read/write tier defaults
+1. ✅ Skill schema, loader, and registry (Markdown + YAML frontmatter)
+2. Shared tool layer (shell, filesystem, web search) with read/write tier defaults — partial: tool tier system specified in `docs/SKILL_AUTHORING.md`, shared tool layer itself not yet implemented
 3. Base agent interface and Claude/Codex wrappers
-4. Rule-based task router with a small classifier fallback — output is `(agent, skill)`
-5. Starter skill library (PR review, frontend, backend, data-platform SQL, etc.)
+4. ✅ Rule-based task router with path-based auto-attach — output is `(agent, skill)`; classifier fallback (Stage 3) deferred
+5. ✅ Starter skill library — five skills shipped: `code-generation`, `pr-review`, `debugging`, `python-backend`, `frontend-react`
 6. Hook system (logging, cost tracking, safety gates)
 7. CLI entrypoint
 8. Working and episodic memory
@@ -195,7 +189,7 @@ For domain terms used throughout the codebase (`router`, `planner`, `tool`, `hoo
 
 ## Contributing
 
-Issues and design discussion are the most useful contributions during the design phase. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to file issues and propose changes, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations.
+Issues, design discussion, and PRs are all useful contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to file issues and propose changes, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations.
 
 To report a security concern, see [SECURITY.md](SECURITY.md).
 
