@@ -5,12 +5,31 @@ import pytest
 from agent_fusion.skills import (
     Skill,
     SkillValidationError,
+    compose_skill_body,
     load_skill,
     load_skills_dir,
 )
 
 REPO_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
+
+
+def _write_skill(path: Path, name: str, body_marker: str, requires: tuple[str, ...] = ()) -> None:
+    requires_yaml = ""
+    if requires:
+        requires_yaml = "requires:\n" + "".join(f"  - {dependency}\n" for dependency in requires)
+    path.write_text(
+        "---\n"
+        f"name: {name}\n"
+        "description: x\n"
+        f"{requires_yaml}"
+        "---\n"
+        "## When to use\n"
+        f"Use {name}.\n"
+        "## Rules\n"
+        f"1. {body_marker}\n",
+        encoding="utf-8",
+    )
 
 
 def test_loads_every_real_skill_in_the_repo():
@@ -133,3 +152,46 @@ def test_requires_cycle_is_rejected(tmp_path: Path):
     )
     with pytest.raises(SkillValidationError, match="cycle"):
         load_skills_dir(tmp_path)
+
+
+def test_compose_skill_body_prepends_required_skills(tmp_path: Path):
+    _write_skill(tmp_path / "foundation.md", "foundation", "foundation rules")
+    _write_skill(
+        tmp_path / "specialized.md",
+        "specialized",
+        "specialized rules",
+        requires=("foundation",),
+    )
+    skills = load_skills_dir(tmp_path)
+
+    body = compose_skill_body(skills, "specialized")
+
+    assert body.index("foundation rules") < body.index("specialized rules")
+
+
+def test_compose_skill_body_includes_transitive_dependencies_once(tmp_path: Path):
+    _write_skill(tmp_path / "foundation.md", "foundation", "foundation rules")
+    _write_skill(
+        tmp_path / "middle.md",
+        "middle",
+        "middle rules",
+        requires=("foundation",),
+    )
+    _write_skill(
+        tmp_path / "specialized.md",
+        "specialized",
+        "specialized rules",
+        requires=("foundation", "middle"),
+    )
+    skills = load_skills_dir(tmp_path)
+
+    body = compose_skill_body(skills, "specialized")
+
+    assert body.count("foundation rules") == 1
+    assert body.index("foundation rules") < body.index("middle rules")
+    assert body.index("middle rules") < body.index("specialized rules")
+
+
+def test_compose_skill_body_unknown_skill_is_rejected():
+    with pytest.raises(SkillValidationError, match="skill 'missing': unknown skill"):
+        compose_skill_body({}, "missing")

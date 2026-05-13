@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import yaml
 
@@ -83,6 +83,29 @@ def load_skills_dir(directory: Path) -> dict[str, Skill]:
         skills[skill.name] = skill
     _check_requires_graph(skills)
     return skills
+
+
+def compose_skill_body(skills: Mapping[str, Skill], name: str) -> str:
+    """Return a skill body with `requires` dependencies prepended in order."""
+    if name not in skills:
+        raise SkillValidationError(f"skill {name!r}: unknown skill")
+
+    bodies: list[str] = []
+    seen: set[str] = set()
+
+    def append_body(skill_name: str) -> None:
+        if skill_name in seen:
+            return
+        if skill_name not in skills:
+            raise SkillValidationError(f"skill {skill_name!r}: unknown skill")
+        skill = skills[skill_name]
+        for dependency in skill.requires:
+            append_body(dependency)
+        seen.add(skill_name)
+        bodies.append(skill.body.rstrip())
+
+    append_body(name)
+    return "\n\n".join(bodies) + "\n"
 
 
 def _split_frontmatter(text: str, path: Path) -> tuple[str, str]:
