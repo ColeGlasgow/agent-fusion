@@ -195,3 +195,13 @@ def test_compose_skill_body_includes_transitive_dependencies_once(tmp_path: Path
 def test_compose_skill_body_unknown_skill_is_rejected():
     with pytest.raises(SkillValidationError, match="skill 'missing': unknown skill"):
         compose_skill_body({}, "missing")
+
+
+def test_compose_skill_body_returns_only_own_body_when_no_requires(tmp_path: Path):
+    _write_skill(tmp_path / "solo.md", "solo", "solo rules")
+    skills = load_skills_dir(tmp_path)
+
+    body = compose_skill_body(skills, "solo")
+
+    assert "solo rules" in body
+    assert body.count("solo rules") == 1

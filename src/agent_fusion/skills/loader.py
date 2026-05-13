@@ -5,7 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import yaml
 
@@ -86,7 +87,11 @@ def load_skills_dir(directory: Path) -> dict[str, Skill]:
 
 
 def compose_skill_body(skills: Mapping[str, Skill], name: str) -> str:
-    """Return a skill body with `requires` dependencies prepended in order."""
+    """Return a skill body with `requires` dependencies prepended in order.
+
+    `skills` must be a validated map (e.g. from `load_skills_dir`), which
+    guarantees all `requires` targets resolve and the graph is acyclic.
+    """
     if name not in skills:
         raise SkillValidationError(f"skill {name!r}: unknown skill")
 
@@ -96,8 +101,6 @@ def compose_skill_body(skills: Mapping[str, Skill], name: str) -> str:
     def append_body(skill_name: str) -> None:
         if skill_name in seen:
             return
-        if skill_name not in skills:
-            raise SkillValidationError(f"skill {skill_name!r}: unknown skill")
         skill = skills[skill_name]
         for dependency in skill.requires:
             append_body(dependency)
