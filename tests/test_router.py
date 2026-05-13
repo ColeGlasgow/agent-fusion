@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from agent_fusion.router import Router, RoutingError, StaticAgentRegistry, Task
-from agent_fusion.skills import load_skills_dir
+from agent_fusion.skills import Skill, load_skills_dir
 
 REPO_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
@@ -33,6 +33,15 @@ def _rules_file(tmp_path: Path, text: str) -> Path:
     path = tmp_path / "routing_rules.yaml"
     path.write_text(text, encoding="utf-8")
     return path
+
+
+def _add_skill_with_paths(skills: dict[str, Skill], name: str, paths: tuple[str, ...]) -> None:
+    skills[name] = replace(
+        skills["code-generation"],
+        name=name,
+        paths=paths,
+        preferred_models=("codex-medium",),
+    )
 
 
 def test_empty_description_raises_before_stage_1():
@@ -198,6 +207,124 @@ rules:
 
     assert decision.skill == "code-generation"
     assert decision.reason == "matched rule: catch-all"
+
+
+def test_attachment_paths_select_skill_before_catch_all(tmp_path):
+    skills = _skills()
+    _add_skill_with_paths(skills, "python-auto", ("**/*.py",))
+    rules = _rules_file(
+        tmp_path,
+        """
+rules:
+  - name: catch-all
+    when:
+      always: true
+    then:
+      skill: code-generation
+""",
+    )
+    router = _router(rules=rules, skills=skills)
+
+    decision = router.route(Task(description="change this file", attachments=("src/foo.py",)))
+
+    assert decision.skill == "python-auto"
+    assert decision.confidence == 0.9
+    assert decision.reason == "task attachments matched skill paths: **/*.py"
+
+
+def test_explicit_rule_wins_over_attachment_path(tmp_path):
+    skills = _skills()
+    _add_skill_with_paths(skills, "python-auto", ("**/*.py",))
+    rules = _rules_file(
+        tmp_path,
+        """
+rules:
+  - name: review-rule
+    when:
+      description_matches: "(?i)review"
+    then:
+      skill: pr-review
+  - name: catch-all
+    when:
+      always: true
+    then:
+      skill: code-generation
+""",
+    )
+    router = _router(rules=rules, skills=skills)
+
+    decision = router.route(Task(description="review this", attachments=("src/foo.py",)))
+
+    assert decision.skill == "pr-review"
+    assert decision.confidence == 1.0
+    assert decision.reason == "matched rule: review-rule"
+
+
+def test_attachment_paths_do_not_fire_without_attachments(tmp_path):
+    skills = _skills()
+    _add_skill_with_paths(skills, "python-auto", ("**/*.py",))
+    rules = _rules_file(
+        tmp_path,
+        """
+rules:
+  - name: catch-all
+    when:
+      always: true
+    then:
+      skill: code-generation
+""",
+    )
+    router = _router(rules=rules, skills=skills)
+
+    decision = router.route(Task(description="change this file"))
+
+    assert decision.skill == "code-generation"
+    assert decision.confidence == 1.0
+    assert decision.reason == "matched rule: catch-all"
+
+
+def test_more_specific_attachment_path_wins(tmp_path):
+    skills = _skills()
+    _add_skill_with_paths(skills, "python-general", ("**/*.py",))
+    _add_skill_with_paths(skills, "python-tests", ("tests/**/*.py",))
+    rules = _rules_file(
+        tmp_path,
+        """
+rules:
+  - name: catch-all
+    when:
+      always: true
+    then:
+      skill: code-generation
+""",
+    )
+    router = _router(rules=rules, skills=skills)
+
+    decision = router.route(Task(description="change this file", attachments=("tests/foo.py",)))
+
+    assert decision.skill == "python-tests"
+    assert decision.reason == "task attachments matched skill paths: tests/**/*.py"
+
+
+def test_attachment_path_reason_cites_matching_glob_verbatim(tmp_path):
+    skills = _skills()
+    _add_skill_with_paths(skills, "python-auto", ("src/**/*.py",))
+    rules = _rules_file(
+        tmp_path,
+        """
+rules:
+  - name: catch-all
+    when:
+      always: true
+    then:
+      skill: code-generation
+""",
+    )
+    router = _router(rules=rules, skills=skills)
+
+    decision = router.route(Task(description="change this file", attachments=("src/foo.py",)))
+
+    assert decision.reason == "task attachments matched skill paths: src/**/*.py"
 
 
 @pytest.mark.parametrize(

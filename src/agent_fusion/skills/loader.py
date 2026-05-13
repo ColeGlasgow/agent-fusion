@@ -19,7 +19,7 @@ WRITE_TIER_TOOLS = frozenset({
 
 REQUIRED_FIELDS = {"name", "description"}
 OPTIONAL_FIELDS = {
-    "preferred_models", "allowed_tools", "success_criteria", "tags", "requires",
+    "preferred_models", "allowed_tools", "success_criteria", "tags", "requires", "paths",
 }
 KNOWN_FIELDS = REQUIRED_FIELDS | OPTIONAL_FIELDS
 
@@ -42,6 +42,7 @@ class Skill:
     success_criteria: tuple[str, ...] = ()
     tags: frozenset[str] = field(default_factory=frozenset)
     requires: tuple[str, ...] = ()
+    paths: tuple[str, ...] = ()
 
 
 def load_skill(path: Path) -> Skill:
@@ -63,6 +64,7 @@ def load_skill(path: Path) -> Skill:
         success_criteria=tuple(data.get("success_criteria", []) or []),
         tags=frozenset(data.get("tags", []) or []),
         requires=tuple(data.get("requires", []) or []),
+        paths=tuple(data.get("paths", []) or []),
     )
 
 
