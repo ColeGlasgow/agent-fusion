@@ -113,10 +113,14 @@ class Router:
                     matches.append((len(glob), skill_name, glob))
         if not matches:
             return None
+        # Specificity is a rough heuristic: longer glob string wins, alphabetical by name as tiebreak.
         _specificity, skill_name, glob = sorted(matches, key=lambda item: (-item[0], item[1]))[0]
         return skill_name, glob
 
     def _path_matches(self, attachment: str, glob: str) -> bool:
+        # Python's fnmatch does not natively support gitignore-style `**` recursive globs:
+        # `fnmatch("foo.py", "**/*.py")` is False because the translated regex requires a `/`.
+        # Re-run with `**/` stripped so a recursive glob also matches zero-directory paths.
         if fnmatch.fnmatch(attachment, glob):
             return True
         if "**/" in glob:
