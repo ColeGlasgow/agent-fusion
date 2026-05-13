@@ -150,13 +150,12 @@ These are deliberately deferred — flagged here so they are not forgotten:
 4. **Learning from corrections.** If the user overrides a routing decision repeatedly for similar tasks, the router could promote that into a rule automatically. Out of scope until usage data exists.
 5. **Routing in agentic loops.** A long-running agent task may decompose into subtasks, each needing its own routing decision. The router contract is designed for one task at a time; multi-step routing is a separate concern.
 
-## What this design unblocks
+## Implementation status
 
-With this document in place, the next code-side work has a clear target:
-
-1. A minimal router that implements Stage 1 (pins) and Stage 2 (rule-based) only.
-2. A `config/routing_rules.yaml` checked into the repo with the default rules.
-3. An `AgentRegistry` interface (no implementation yet) for agent availability checks.
-4. Tests that exercise each stage and each failure mode listed above.
+1. ✅ Router with Stage 1 (pins) and Stage 2 (rule-based) — `src/agent_fusion/router/router.py`.
+2. ✅ `config/routing_rules.yaml` checked into the repo with the default rules.
+3. ✅ `AgentRegistry` interface — minimal `StaticAgentRegistry` implementation in `src/agent_fusion/router/agent_registry.py`.
+4. ✅ Tests covering each stage and failure mode — `tests/test_router.py`.
+5. ✅ Path-based auto-attach (added after the original document was written) — see the "Skill paths and auto-attach" section above.
 
 Stage 3 (the classifier) is a follow-up project once the rule-based router is in production and we know which routing decisions humans actually make.

@@ -26,8 +26,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install test dependencies
+      - name: Install dev dependencies
         run: pip install .[dev]
 
-      - name: Run tests
-        run: pytest tests/ -v
+      - name: Run verify
+        run: bash scripts/verify.sh

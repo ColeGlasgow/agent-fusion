@@ -56,13 +56,7 @@ def test_code_generation_skill_declares_filesystem_write():
 def test_paths_frontmatter_loads_as_tuple(tmp_path: Path):
     skill_path = tmp_path / "python-auto.md"
     skill_path.write_text(
-        "---\n"
-        "name: python-auto\n"
-        "description: x\n"
-        "paths:\n"
-        "  - '**/*.py'\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n",
+        "---\nname: python-auto\ndescription: x\npaths:\n  - '**/*.py'\n---\n## When to use\nx\n## Rules\n1. x\n",
         encoding="utf-8",
     )
 
@@ -73,39 +67,21 @@ def test_paths_frontmatter_loads_as_tuple(tmp_path: Path):
 
 def test_missing_required_field_is_rejected(tmp_path: Path):
     bad = tmp_path / "bad.md"
-    bad.write_text(
-        "---\n"
-        "name: bad\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
-    )
+    bad.write_text("---\nname: bad\n---\n## When to use\nx\n## Rules\n1. x\n")
     with pytest.raises(SkillValidationError, match="missing required"):
         load_skill(bad)
 
 
 def test_unknown_frontmatter_field_is_rejected(tmp_path: Path):
     bad = tmp_path / "bad.md"
-    bad.write_text(
-        "---\n"
-        "name: bad\n"
-        "description: x\n"
-        "typo_field: y\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
-    )
+    bad.write_text("---\nname: bad\ndescription: x\ntypo_field: y\n---\n## When to use\nx\n## Rules\n1. x\n")
     with pytest.raises(SkillValidationError, match="unknown frontmatter"):
         load_skill(bad)
 
 
 def test_filename_must_match_name(tmp_path: Path):
     bad = tmp_path / "wrong-name.md"
-    bad.write_text(
-        "---\n"
-        "name: different-name\n"
-        "description: x\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
-    )
+    bad.write_text("---\nname: different-name\ndescription: x\n---\n## When to use\nx\n## Rules\n1. x\n")
     with pytest.raises(SkillValidationError, match="must match name"):
         load_skill(bad)
 
@@ -113,12 +89,7 @@ def test_filename_must_match_name(tmp_path: Path):
 def test_read_tier_tool_in_allowed_tools_is_rejected(tmp_path: Path):
     bad = tmp_path / "bad.md"
     bad.write_text(
-        "---\n"
-        "name: bad\n"
-        "description: x\n"
-        "allowed_tools:\n  - filesystem.read\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
+        "---\nname: bad\ndescription: x\nallowed_tools:\n  - filesystem.read\n---\n## When to use\nx\n## Rules\n1. x\n"
     )
     with pytest.raises(SkillValidationError, match="read-tier tool"):
         load_skill(bad)
@@ -127,12 +98,7 @@ def test_read_tier_tool_in_allowed_tools_is_rejected(tmp_path: Path):
 def test_unknown_tool_is_rejected(tmp_path: Path):
     bad = tmp_path / "bad.md"
     bad.write_text(
-        "---\n"
-        "name: bad\n"
-        "description: x\n"
-        "allowed_tools:\n  - made.up.tool\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
+        "---\nname: bad\ndescription: x\nallowed_tools:\n  - made.up.tool\n---\n## When to use\nx\n## Rules\n1. x\n"
     )
     with pytest.raises(SkillValidationError, match="unknown tool"):
         load_skill(bad)
@@ -140,33 +106,17 @@ def test_unknown_tool_is_rejected(tmp_path: Path):
 
 def test_missing_body_section_is_rejected(tmp_path: Path):
     bad = tmp_path / "bad.md"
-    bad.write_text(
-        "---\n"
-        "name: bad\n"
-        "description: x\n"
-        "---\n"
-        "## When to use\nx\n"
-    )
+    bad.write_text("---\nname: bad\ndescription: x\n---\n## When to use\nx\n")
     with pytest.raises(SkillValidationError, match="## Rules"):
         load_skill(bad)
 
 
 def test_requires_cycle_is_rejected(tmp_path: Path):
     (tmp_path / "alpha.md").write_text(
-        "---\n"
-        "name: alpha\n"
-        "description: x\n"
-        "requires:\n  - beta\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
+        "---\nname: alpha\ndescription: x\nrequires:\n  - beta\n---\n## When to use\nx\n## Rules\n1. x\n"
     )
     (tmp_path / "beta.md").write_text(
-        "---\n"
-        "name: beta\n"
-        "description: x\n"
-        "requires:\n  - alpha\n"
-        "---\n"
-        "## When to use\nx\n## Rules\n1. x\n"
+        "---\nname: beta\ndescription: x\nrequires:\n  - alpha\n---\n## When to use\nx\n## Rules\n1. x\n"
     )
     with pytest.raises(SkillValidationError, match="cycle"):
         load_skills_dir(tmp_path)

@@ -4,8 +4,7 @@ from typing import Protocol
 
 
 class AgentRegistry(Protocol):
-    def is_available(self, name: str) -> bool:
-        ...
+    def is_available(self, name: str) -> bool: ...
 
 
 class StaticAgentRegistry:
