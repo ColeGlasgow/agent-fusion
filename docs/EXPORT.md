@@ -46,3 +46,38 @@ Each `SKILL.md` contains the composed body (a skill with `requires:` gets its fo
 - `<project>/.claude/skills/` — project-scoped skills, checked into the project repo.
 
 See [Claude Code's skill documentation](https://code.claude.com/docs/en/skills) for details on skill scoping, invocation, and the `SKILL.md` format.
+
+## Cursor
+
+```bash
+python -m agent_fusion.export.cursor --output-dir .cursor/rules
+```
+
+This writes one flat Cursor rule file per agent-fusion skill:
+
+```
+.cursor/rules/
+├── code-generation.mdc
+├── code-generation.sources.md
+├── debugging.mdc
+├── debugging.sources.md
+├── frontend-react.mdc
+├── frontend-react.sources.md
+├── pr-review.mdc
+├── pr-review.sources.md
+├── python-backend.mdc
+└── python-backend.sources.md
+```
+
+Each `.mdc` file contains the composed body (a skill with `requires:` gets its foundation prepended) plus Cursor-compatible rule frontmatter. The `.sources.md` sidecar travels with the rule so the citation trail is preserved.
+
+### What the exporter does
+
+- **Composition.** `python-backend` declares `requires: [code-generation]`. The exported `python-backend.mdc` includes the full `code-generation` body before the `python-backend` body, in the same order the skill loader produces.
+- **Frontmatter remapping.**
+  - `description` is preserved verbatim.
+  - `paths` becomes Cursor's comma-separated `globs` field.
+  - `alwaysApply` is always written as `false`.
+  - `name` is dropped because the `.mdc` filename carries the rule identity.
+  - `success_criteria` is appended as a `## Success criteria` section at the end of the body so the verification checklist follows the rule into Cursor.
+  - `allowed_tools`, `requires`, `preferred_models`, and `tags` are dropped — Cursor rules have no tool-permission concept or equivalent metadata fields, and `requires` is already resolved via composition.

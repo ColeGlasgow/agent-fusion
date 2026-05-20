@@ -88,9 +88,7 @@ def export_skill(
 
     sources_src = skill.source_path.with_name(f"{skill_name}.sources.md")
     if sources_src.exists():
-        (skill_dir / "sources.md").write_text(
-            sources_src.read_text(encoding="utf-8"), encoding="utf-8"
-        )
+        (skill_dir / "sources.md").write_text(sources_src.read_text(encoding="utf-8"), encoding="utf-8")
 
     return skill_md
 
