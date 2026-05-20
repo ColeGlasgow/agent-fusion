@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-stop health check: run locally before pushing, and in CI on every PR.
-# Gates: pytest, ruff lint, ruff format check, Claude Code exporter smoke test.
+# Gates: pytest, ruff lint, ruff format check, exporter smoke tests.
 
 set -euo pipefail
 
@@ -18,19 +18,25 @@ echo "==> ruff format --check"
 "$PY" -m ruff format --check src/ tests/
 
 echo "==> exporter smoke test"
-if "$PY" -c "import agent_fusion.export.claude_code" 2>/dev/null; then
-    tmpdir=$(mktemp -d)
-    trap 'rm -rf "$tmpdir"' EXIT
-    "$PY" -m agent_fusion.export.claude_code --output-dir "$tmpdir"
-    for skill in code-generation python-backend frontend-react; do
-        if [ ! -f "$tmpdir/$skill/SKILL.md" ]; then
-            echo "exporter smoke test failed: $tmpdir/$skill/SKILL.md missing" >&2
-            exit 1
-        fi
-    done
-    echo "    ok: 3 expected SKILL.md files written"
-else
-    echo "    skipped: agent_fusion.export.claude_code not yet on this branch"
-fi
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
+
+PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" "$PY" -m agent_fusion.export.claude_code --output-dir "$tmpdir/claude-code"
+for skill in code-generation python-backend frontend-react; do
+    if [ ! -f "$tmpdir/claude-code/$skill/SKILL.md" ]; then
+        echo "exporter smoke test failed: $tmpdir/claude-code/$skill/SKILL.md missing" >&2
+        exit 1
+    fi
+done
+echo "    ok: 3 expected Claude Code SKILL.md files written"
+
+PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" "$PY" -m agent_fusion.export.cursor --output-dir "$tmpdir/cursor"
+for skill in code-generation python-backend frontend-react; do
+    if [ ! -f "$tmpdir/cursor/$skill.mdc" ]; then
+        echo "exporter smoke test failed: $tmpdir/cursor/$skill.mdc missing" >&2
+        exit 1
+    fi
+done
+echo "    ok: 3 expected Cursor .mdc files written"
 
 echo "==> all gates passed"
