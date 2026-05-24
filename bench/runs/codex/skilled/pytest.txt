@@ -1,0 +1,14 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Users/coleglasgow/claude-projects/agent-fusion/bench/runs/codex/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/coleglasgow/claude-projects/agent-fusion
+configfile: pyproject.toml
+plugins: anyio-4.12.1
+collecting ... collected 4 items
+
+bench/runs/codex/skilled/test_main.py::test_create_task_success PASSED   [ 25%]
+bench/runs/codex/skilled/test_main.py::test_create_task_validation_failure PASSED [ 50%]
+bench/runs/codex/skilled/test_main.py::test_create_task_conflict PASSED  [ 75%]
+bench/runs/codex/skilled/test_main.py::test_create_task_idempotency_key_reuses_existing_task PASSED [100%]
+
+============================== 4 passed in 0.18s ===============================
